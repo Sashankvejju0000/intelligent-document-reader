@@ -29,7 +29,7 @@ import {
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
 
-// DocuQuery AI Vibrant Cyan Rounded Glass Logo Icon
+// DocuQuery AI Logo Icon
 const DocuQueryLogo = () => (
   <svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -42,7 +42,7 @@ const DocuQueryLogo = () => (
 )
 
 /* ==========================================================================
-   BLOCK-WISE INTERACTIVE RESPONSE RENDERER
+   BLOCK-WISE INTERACTIVE RESPONSE RENDERER (Clean & Uncluttered Layout)
    ========================================================================== */
 const MessageBlockRenderer = ({ text, handleAsk }) => {
   if (!text) return null
@@ -134,7 +134,8 @@ export default function App() {
   const [serverOnline, setServerOnline] = useState(false)
   const [openSources, setOpenSources] = useState({})
   
-  // Dynamic Document Viewer State
+  // Real PDF Blob URL & Page Viewer State
+  const [pdfBlobUrl, setPdfBlobUrl] = useState(null)
   const [selectedPage, setSelectedPage] = useState(1)
   const [activeSnippet, setActiveSnippet] = useState('')
   
@@ -184,6 +185,12 @@ export default function App() {
 
     setUploading(true)
     setError('')
+    
+    // Create live Blob Object URL for iframe PDF rendering
+    const objectUrl = URL.createObjectURL(file)
+    setPdfBlobUrl(objectUrl)
+    setSelectedPage(1)
+
     const formData = new FormData()
     formData.append('file', file)
 
@@ -284,6 +291,7 @@ export default function App() {
       await fetch(`${API_BASE}/reset`, { method: 'POST' })
       setDocuments([])
       setMessages([])
+      setPdfBlobUrl(null)
       setSelectedPage(1)
       setActiveSnippet('')
       setError('')
@@ -500,7 +508,7 @@ export default function App() {
             <line x1="120" y1="50" x2="150" y2="90" stroke="#00C9A7" strokeWidth="1.5" />
           </svg>
 
-          {/* Overlaid Central Welcome Modal (Shows only when no messages exist) */}
+          {/* Overlaid Central Welcome Modal */}
           {messages.length === 0 && (
             <div className="central-overlay-modal animate-fade-in">
               <div className="modal-logo-icon">
@@ -515,14 +523,14 @@ export default function App() {
 
           {/* Split Interaction View */}
           <div className="split-view-container">
-            {/* Left Side: Document Preview Pane with Dynamic Page Jumps */}
+            {/* Left Side: Real PDF Document Previewer (Renders PDF file at Page N!) */}
             <div className="doc-preview-pane">
               <div className="pane-toolbar">
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <Sidebar size={16} />
                   <FileText size={16} />
                   <span style={{ fontWeight: 600 }}>
-                    {activeDoc ? activeDoc.filename : 'Document Preview'}
+                    {activeDoc ? activeDoc.filename : 'PDF Viewer'}
                   </span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -547,28 +555,37 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="doc-paper-view">
-                <h4 style={{ fontSize: '1.05rem', fontWeight: 'bold', marginBottom: 10, color: '#0f172a' }}>
-                  📄 Document Page {selectedPage} Content
-                </h4>
+              {pdfBlobUrl ? (
+                <iframe
+                  key={`${pdfBlobUrl}-${selectedPage}`}
+                  src={`${pdfBlobUrl}#page=${selectedPage}`}
+                  className="pdf-iframe-viewer"
+                  title="PDF Document Preview"
+                />
+              ) : (
+                <div className="doc-paper-view">
+                  <h4 style={{ fontSize: '1.05rem', fontWeight: 'bold', marginBottom: 10, color: '#0f172a' }}>
+                    📄 PDF Page Viewer
+                  </h4>
 
-                {activeSnippet ? (
-                  <div style={{ marginBottom: 14 }}>
-                    <div style={{ fontSize: '0.78rem', color: '#0284c7', fontWeight: 'bold', marginBottom: 6 }}>
-                      🎯 RETRIEVED EXCERPT FROM PAGE {selectedPage}:
+                  {activeSnippet ? (
+                    <div style={{ marginBottom: 14 }}>
+                      <div style={{ fontSize: '0.78rem', color: '#0284c7', fontWeight: 'bold', marginBottom: 6 }}>
+                        🎯 RETRIEVED EXCERPT FROM PAGE {selectedPage}:
+                      </div>
+                      <p className="doc-highlight" style={{ fontSize: '0.92rem', lineHeight: '1.65', color: '#0f172a', fontWeight: '500' }}>
+                        "{activeSnippet}"
+                      </p>
                     </div>
-                    <p className="doc-highlight" style={{ fontSize: '0.92rem', lineHeight: '1.6', color: '#0f172a', fontWeight: '500' }}>
-                      "{activeSnippet}"
+                  ) : (
+                    <p style={{ marginBottom: 12, fontStyle: 'italic', color: '#475569' }}>
+                      {activeDoc
+                        ? `Viewing Page ${selectedPage} of ${activeDoc.filename}. Ask any question or click a page citation to view extracted snippets.`
+                        : 'Upload a PDF on the left. The PDF viewer will render your actual pages live.'}
                     </p>
-                  </div>
-                ) : (
-                  <p style={{ marginBottom: 12, fontStyle: 'italic', color: '#475569' }}>
-                    {activeDoc
-                      ? `Viewing Page ${selectedPage} of ${activeDoc.filename}. Ask any question or click a page citation to view extracted snippets.`
-                      : 'Upload a PDF on the left. Once indexed, you can jump directly to any page cited in your answers.'}
-                  </p>
-                )}
-              </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Right Side: Response / Chat Area */}
