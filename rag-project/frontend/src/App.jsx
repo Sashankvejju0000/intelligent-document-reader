@@ -83,11 +83,11 @@ const MessageBlockRenderer = ({ text, handleAsk }) => {
         }
 
         if (trimmed.startsWith('#') || (trimmed.startsWith('**') && trimmed.endsWith('**') && trimmed.length < 70)) {
-          const headerText = trimmed.replace(/^#+\s*/, '').replace(/\*\*/g, '')
+          const headerText = trimmed.replace(/^#+\s*/, '').replace(/\*\*/g, '').trim()
           return (
             <div key={idx} className="block-header-card animate-fade-in">
               <div className="block-header-dot" />
-              <span className="block-header-title">{headerText}</span>
+              <span className="block-header-title">📌 {headerText}</span>
             </div>
           )
         }
@@ -97,7 +97,7 @@ const MessageBlockRenderer = ({ text, handleAsk }) => {
           return (
             <div key={idx} className="block-list-grid animate-fade-in">
               {listItems.map((item, itemIdx) => {
-                const cleanItem = item.replace(/^[0-9\.\-\*\•\s]+/, '').trim()
+                const cleanItem = item.replace(/^[0-9\.\-\*\•\s]+/, '').replace(/\*\*/g, '').trim()
                 return (
                   <div key={itemIdx} className="block-list-card">
                     <div className="block-list-badge">{itemIdx + 1}</div>
@@ -111,9 +111,10 @@ const MessageBlockRenderer = ({ text, handleAsk }) => {
           )
         }
 
+        const cleanPara = trimmed.replace(/\*\*/g, '')
         return (
           <div key={idx} className="block-para-card animate-fade-in">
-            <ReactMarkdown>{trimmed}</ReactMarkdown>
+            <ReactMarkdown>{cleanPara}</ReactMarkdown>
           </div>
         )
       })}
