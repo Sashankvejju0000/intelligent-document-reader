@@ -231,27 +231,26 @@ export default function App() {
 
   async function handleDeleteDocument(filename) {
     if (!window.confirm(`Are you sure you want to delete "${filename}"?`)) return
+    
+    // Always remove from local state immediately
+    setDocuments((prev) => prev.filter((d) => d.filename !== filename))
+    setPdfBlobMap((prev) => {
+      const copy = { ...prev }
+      delete copy[filename]
+      return copy
+    })
+    setActiveDocIndex(0)
+    setSelectedPage(1)
+
     try {
-      const res = await fetch(`${API_BASE}/delete-doc`, {
+      await fetch(`${API_BASE}/delete-doc`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ filename })
       })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.detail || 'Failed to delete document.')
-      
-      // Instantly remove from local documents list & blob map
-      setDocuments((prev) => prev.filter((d) => d.filename !== filename))
-      setPdfBlobMap((prev) => {
-        const copy = { ...prev }
-        delete copy[filename]
-        return copy
-      })
-      setActiveDocIndex(0)
-      setSelectedPage(1)
       await fetchDocuments()
     } catch (err) {
-      setError('Delete error: ' + err.message)
+      console.warn('Delete sync:', err)
     }
   }
 
