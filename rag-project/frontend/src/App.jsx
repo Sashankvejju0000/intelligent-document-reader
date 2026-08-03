@@ -124,6 +124,7 @@ const MessageBlockRenderer = ({ text, handleAsk }) => {
 
 export default function App() {
   const [documents, setDocuments] = useState([])
+  const [activeDocIndex, setActiveDocIndex] = useState(0)
   const [uploading, setUploading] = useState(false)
   const [summarizing, setSummarizing] = useState(false)
   const [isDragOver, setIsDragOver] = useState(false)
@@ -135,8 +136,8 @@ export default function App() {
   const [serverOnline, setServerOnline] = useState(false)
   const [openSources, setOpenSources] = useState({})
   
-  // Real PDF Blob URL & Page Navigation State
-  const [pdfBlobUrl, setPdfBlobUrl] = useState(null)
+  // Real PDF Blob Map for Multiple Documents
+  const [pdfBlobMap, setPdfBlobMap] = useState({}) // { filename: blobUrl }
   const [selectedPage, setSelectedPage] = useState(1)
   const [activeSnippet, setActiveSnippet] = useState('')
   const [viewKey, setViewKey] = useState(0)
@@ -179,56 +180,72 @@ export default function App() {
     }
   }
 
-  // Instant PDF Preview Generator
-  function initPdfPreview(file) {
-    if (!file) return
-    const objectUrl = URL.createObjectURL(file)
-    setPdfBlobUrl(objectUrl)
-    setSelectedPage(1)
-    setViewKey((prev) => prev + 1)
-  }
+  // Multi-file PDF Upload Handler
+  async function uploadFiles(files) {
+    if (!files || files.length === 0) return
 
-  async function uploadFile(file) {
-    if (!file || !file.name.toLowerCase().endsWith('.pdf')) {
-      setError('Please upload a valid PDF file.')
+    const validFiles = Array.from(files).filter(f => f.name.toLowerCase().endsWith('.pdf'))
+    if (validFiles.length === 0) {
+      setError('Please select valid PDF file(s).')
       return
     }
 
     setUploading(true)
     setError('')
 
-    const formData = new FormData()
-    formData.append('file', file)
+    // Immediately save blob URLs for instant rendering of all selected PDFs
+    const newMap = { ...pdfBlobMap }
+    validFiles.forEach(f => {
+      newMap[f.name] = URL.createObjectURL(f)
+    })
+    setPdfBlobMap(newMap)
+    setSelectedPage(1)
 
-    try {
-      const res = await fetch(`${API_BASE}/upload`, { method: 'POST', body: formData })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.detail || 'Upload failed')
+    for (const file of validFiles) {
+      const formData = new FormData()
+      formData.append('file', file)
 
-      await fetchDocuments()
-    } catch (err) {
-      setError(err.message)
-    } finally {
-      setUploading(false)
-      if (fileInputRef.current) fileInputRef.current.value = ''
+      try {
+        const res = await fetch(`${API_BASE}/upload`, { method: 'POST', body: formData })
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.detail || `Failed to upload ${file.name}`)
+      } catch (err) {
+        setError(err.message)
+      }
     }
+
+    await fetchDocuments()
+    setUploading(false)
+    if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
   function handleFileSelect(e) {
-    const file = e.target.files?.[0]
-    if (file) {
-      initPdfPreview(file)
-      uploadFile(file)
-    }
+    if (e.target.files) uploadFiles(e.target.files)
   }
 
   function handleDrop(e) {
     e.preventDefault()
     setIsDragOver(false)
-    const file = e.dataTransfer.files?.[0]
-    if (file) {
-      initPdfPreview(file)
-      uploadFile(file)
+    if (e.dataTransfer.files) uploadFiles(e.dataTransfer.files)
+  }
+
+  async function handleDeleteDocument(filename) {
+    if (!window.confirm(`Are you sure you want to delete "${filename}"?`)) return
+    try {
+      const res = await fetch(`${API_BASE}/documents/${encodeURIComponent(filename)}`, {
+        method: 'DELETE'
+      })
+      if (!res.ok) throw new Error('Failed to delete document.')
+      
+      // Clean blob URL & update list
+      setPdfBlobMap((prev) => {
+        const copy = { ...prev }
+        delete copy[filename]
+        return copy
+      })
+      await fetchDocuments()
+    } catch (err) {
+      setError(err.message)
     }
   }
 
@@ -255,9 +272,12 @@ export default function App() {
         { role: 'assistant', text: data.answer, sources: data.sources },
       ])
 
-      // Instant Redirect/Jump of PDF viewer to top matching source page & snippet!
+      // Auto-jump PDF viewer to top matching source document & page!
       if (data.sources && data.sources.length > 0) {
-        jumpToPage(data.sources[0].page || 1, data.sources[0].chunk_text || '')
+        const topSrc = data.sources[0]
+        const docIdx = documents.findIndex(d => d.filename === topSrc.document)
+        if (docIdx !== -1) setActiveDocIndex(docIdx)
+        jumpToPage(topSrc.page || 1, topSrc.chunk_text || '')
       }
     } catch (err) {
       setError(err.message)
@@ -279,7 +299,7 @@ export default function App() {
 
     setMessages((prev) => [
       ...prev,
-      { role: 'user', text: '📝 Generate an executive summary of the uploaded document.' }
+      { role: 'user', text: '📝 Generate an executive summary of the uploaded document(s).' }
     ])
 
     try {
@@ -304,7 +324,7 @@ export default function App() {
       await fetch(`${API_BASE}/reset`, { method: 'POST' })
       setDocuments([])
       setMessages([])
-      setPdfBlobUrl(null)
+      setPdfBlobMap({})
       setSelectedPage(1)
       setActiveSnippet('')
       setError('')
@@ -339,8 +359,9 @@ export default function App() {
     setOpenSources((prev) => ({ ...prev, [index]: !prev[index] }))
   }
 
-  const activeDoc = documents.length > 0 ? documents[0] : null
+  const activeDoc = documents.length > 0 ? documents[Math.min(activeDocIndex, documents.length - 1)] : null
   const maxPages = activeDoc ? activeDoc.pages : 1
+  const currentBlobUrl = activeDoc ? pdfBlobMap[activeDoc.filename] : null
 
   return (
     <div className="app-container">
@@ -353,7 +374,7 @@ export default function App() {
           <div>
             <h1 className="header-title">DocuQuery AI</h1>
             <p className="header-subtitle">
-              Next-Gen Intelligent Document Reader • Instant Knowledge Extraction • Precise Attribution
+              Next-Gen Intelligent Document Reader • Instant Knowledge Extraction • Multi-PDF Management
             </p>
           </div>
         </div>
@@ -382,7 +403,7 @@ export default function App() {
 
           {documents.length > 0 && (
             <button className="btn-reset" onClick={handleResetStore} title="Clear indexed knowledge store">
-              <Trash2 size={15} /> Clear Store
+              <Trash2 size={15} /> Clear All
             </button>
           )}
         </div>
@@ -408,7 +429,7 @@ export default function App() {
               </select>
             </div>
           </div>
-          <span style={{ fontSize: '0.78rem', color: '#00C9A7', fontWeight: 600 }}>✨ Automatic Follow-up Suggestions Active</span>
+          <span style={{ fontSize: '0.78rem', color: '#00C9A7', fontWeight: 600 }}>✨ Multi-PDF Parallel Knowledge Search</span>
         </div>
       )}
 
@@ -421,7 +442,7 @@ export default function App() {
             <BookOpen size={16} />
           </div>
 
-          {/* PDF Drop Zone */}
+          {/* PDF Drop Zone (Supports Multi-File Selection) */}
           <div
             className={`dropzone-box ${isDragOver ? 'active' : ''}`}
             onDragOver={(e) => {
@@ -434,6 +455,7 @@ export default function App() {
           >
             <input
               type="file"
+              multiple
               accept="application/pdf"
               ref={fileInputRef}
               onChange={handleFileSelect}
@@ -444,14 +466,14 @@ export default function App() {
               {uploading ? <Loader2 size={24} className="animate-spin" /> : <Upload size={24} />}
             </div>
             <div className="dropzone-title">
-              {uploading ? 'Processing & Indexing PDF…' : 'Drop your PDF here or Browse'}
+              {uploading ? 'Processing & Indexing PDFs…' : 'Drop your PDFs here or Browse'}
             </div>
             <div className="dropzone-subtitle">
-              Parses via pdfium C-engine - Parallel ONNX tensor embeddings
+              Upload multiple PDFs • Parallel ONNX tensor embeddings
             </div>
           </div>
 
-          {/* INDEXED PDFS Section */}
+          {/* INDEXED PDFS Section with Delete Buttons */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, flex: 1, minHeight: 0 }}>
             <div className="panel-section-header" style={{ fontSize: '0.8rem' }}>
               <span>INDEXED PDFS ({documents.length})</span>
@@ -459,20 +481,42 @@ export default function App() {
 
             {documents.length === 0 ? (
               <div style={{ fontSize: '0.82rem', color: 'rgba(240, 253, 250, 0.5)', textAlign: 'center', padding: '24px 12px', border: '1px dashed rgba(0, 201, 167, 0.2)', borderRadius: 12 }}>
-                No PDF documents uploaded yet. Upload a PDF file above to start questioning.
+                No PDF documents uploaded yet. Drop one or multiple PDF files above to start.
               </div>
             ) : (
               <>
                 <div className="file-card-group">
                   {documents.map((doc, idx) => (
-                    <div key={idx} className="pdf-card animate-fade-in" style={{ borderLeft: '3px solid #00C9A7' }}>
+                    <div
+                      key={idx}
+                      className="pdf-card animate-fade-in"
+                      style={{
+                        borderLeft: activeDocIndex === idx ? '4px solid #00C9A7' : '1px solid rgba(0, 201, 167, 0.2)',
+                        background: activeDocIndex === idx ? 'rgba(0, 201, 167, 0.12)' : 'rgba(13, 33, 39, 0.6)',
+                        cursor: 'pointer'
+                      }}
+                      onClick={() => {
+                        setActiveDocIndex(idx)
+                        setSelectedPage(1)
+                      }}
+                    >
                       <div className="pdf-thumb-box">
                         <FileText size={20} />
                       </div>
                       <div className="pdf-details">
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <div className="pdf-filename" title={doc.filename}>{doc.filename}</div>
-                          <CheckCircle2 size={16} style={{ color: '#00C9A7' }} />
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleDeleteDocument(doc.filename)
+                            }}
+                            className="btn-delete-doc"
+                            title={`Delete ${doc.filename}`}
+                            style={{ background: 'none', border: 'none', color: '#fca5a5', cursor: 'pointer', padding: 3 }}
+                          >
+                            <Trash2 size={15} />
+                          </button>
                         </div>
                         <div className="pdf-meta-line">
                           <span>{doc.pages || 1} Pages</span>
@@ -500,7 +544,7 @@ export default function App() {
                   style={{ marginTop: 8, justifyContent: 'center' }}
                 >
                   {summarizing ? <Loader2 size={18} className="animate-spin" /> : <FileSearch size={18} />}
-                  <span>{summarizing ? 'Generating Summary…' : 'Summarize PDF'}</span>
+                  <span>{summarizing ? 'Generating Summary…' : 'Summarize PDFs'}</span>
                 </button>
               </>
             )}
@@ -529,22 +573,36 @@ export default function App() {
               </div>
               <h3 className="modal-title">DocuQuery Document Assistant</h3>
               <p className="modal-desc">
-                Upload a PDF on the left. Answers are rendered in structured, interactive visualization cards grounded strictly in your document.
+                Upload one or multiple PDFs on the left. Answers are rendered in structured, interactive visualization cards grounded strictly in your documents.
               </p>
             </div>
           )}
 
           {/* Split Interaction View */}
           <div className="split-view-container">
-            {/* Left Side: Real PDF Document Previewer (Instant Preview on File Select + Redirect on Answer) */}
+            {/* Left Side: Real PDF Document Previewer with Multi-Doc Switcher */}
             <div className="doc-preview-pane">
               <div className="pane-toolbar">
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <Sidebar size={16} />
-                  <FileText size={16} />
-                  <span style={{ fontWeight: 600 }}>
-                    {activeDoc ? activeDoc.filename : 'PDF Viewer'}
-                  </span>
+                  {documents.length > 1 ? (
+                    <select
+                      value={activeDocIndex}
+                      onChange={(e) => {
+                        setActiveDocIndex(Number(e.target.value))
+                        setSelectedPage(1)
+                      }}
+                      style={{ background: 'rgba(6, 17, 20, 0.9)', color: '#00C9A7', border: '1px solid var(--glass-border)', padding: '3px 8px', borderRadius: 6, fontWeight: 'bold', outline: 'none' }}
+                    >
+                      {documents.map((d, i) => (
+                        <option key={i} value={i}>{d.filename}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <span style={{ fontWeight: 600 }}>
+                      {activeDoc ? activeDoc.filename : 'PDF Viewer'}
+                    </span>
+                  )}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <button
@@ -568,10 +626,10 @@ export default function App() {
                 </div>
               </div>
 
-              {pdfBlobUrl ? (
+              {currentBlobUrl ? (
                 <iframe
-                  key={`pdf-frame-${viewKey}-${selectedPage}`}
-                  src={`${pdfBlobUrl}#page=${selectedPage}`}
+                  key={`pdf-frame-${activeDoc?.filename}-${viewKey}-${selectedPage}`}
+                  src={`${currentBlobUrl}#page=${selectedPage}`}
                   className="pdf-iframe-viewer"
                   title="PDF Document Preview"
                 />
@@ -594,7 +652,7 @@ export default function App() {
                     <p style={{ marginBottom: 12, fontStyle: 'italic', color: '#475569' }}>
                       {activeDoc
                         ? `Viewing Page ${selectedPage} of ${activeDoc.filename}. Ask any question or click a page citation to view extracted snippets.`
-                        : 'Upload a PDF on the left. The PDF viewer will render your actual pages live.'}
+                        : 'Upload one or multiple PDFs on the left. The PDF viewer will render your actual pages live.'}
                     </p>
                   )}
                 </div>
@@ -673,7 +731,11 @@ export default function App() {
                                     <div
                                       key={j}
                                       className="source-item"
-                                      onClick={() => jumpToPage(s.page || 1, s.chunk_text || '')}
+                                      onClick={() => {
+                                        const dIdx = documents.findIndex(doc => doc.filename === s.document)
+                                        if (dIdx !== -1) setActiveDocIndex(dIdx)
+                                        jumpToPage(s.page || 1, s.chunk_text || '')
+                                      }}
                                       style={{ cursor: 'pointer' }}
                                       title="Click to jump to this page in the PDF viewer"
                                     >
@@ -709,7 +771,7 @@ export default function App() {
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#00C9A7', fontSize: '0.88rem' }}>
                     <Loader2 size={18} className="animate-spin" />
-                    <span>AI is thinking & redirecting to cited page…</span>
+                    <span>AI is searching across all uploaded PDFs…</span>
                   </div>
                 </div>
               )}

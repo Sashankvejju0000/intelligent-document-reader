@@ -347,6 +347,25 @@ def get_documents() -> list:
     return _documents
 
 
+def delete_document(filename: str) -> bool:
+    """Removes a specific document and rebuilds the FAISS vector index."""
+    global _index, _chunk_store, _documents
+    
+    _documents = [d for d in _documents if d["filename"] != filename]
+    _chunk_store = [c for c in _chunk_store if c["source"] != filename]
+    
+    if not _chunk_store:
+        _index = None
+    else:
+        model = get_embedding_model()
+        chunk_texts = [c["text"] for c in _chunk_store]
+        embeddings = np.array(list(model.embed(chunk_texts, batch_size=EMBED_BATCH_SIZE)), dtype="float32")
+        faiss.normalize_L2(embeddings)
+        _index = faiss.IndexFlatIP(embeddings.shape[1])
+        _index.add(embeddings)
+    return True
+
+
 def reset_store():
     """Clears all indexed documents and state."""
     global _index, _chunk_store, _documents

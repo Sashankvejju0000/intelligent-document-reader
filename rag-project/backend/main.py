@@ -113,6 +113,15 @@ async def ask_question(payload: AskRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.delete("/documents/{filename}")
+def delete_document(filename: str):
+    try:
+        rag.delete_document(filename)
+        return {"status": "success", "message": f"Successfully deleted {filename}"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.post("/reset")
 async def reset():
     rag.reset_store()
