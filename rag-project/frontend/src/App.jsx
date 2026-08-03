@@ -32,7 +32,7 @@ const DocuLogo = () => (
     <path d="M14 2V8H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
     <path d="M8 12H13" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
     <path d="M8 16H11" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-    <circle cx="16" cy="16" r="3" fill="#38bdf8" stroke="#090717" strokeWidth="1.5"/>
+    <circle cx="16" cy="16" r="3" fill="#10b981" stroke="#060911" strokeWidth="1.5"/>
   </svg>
 )
 
@@ -62,7 +62,7 @@ const MessageBlockRenderer = ({ text, handleAsk }) => {
           return (
             <div key={idx} className="suggestion-block-card animate-fade-in">
               <div className="block-card-header">
-                <Zap size={16} style={{ color: '#38bdf8' }} />
+                <Zap size={16} style={{ color: '#10b981' }} />
                 <span>Suggested Follow-up Questions</span>
               </div>
               <div className="suggestion-grid">
@@ -316,8 +316,8 @@ export default function App() {
             <DocuLogo />
           </div>
           <div>
-            <h1 className="title">DocuQuery Reader</h1>
-            <p className="subtitle">Precision Document Q&A • Sub-second Retrieval • Page Attribution</p>
+            <h1 className="title">DocuQuery AI</h1>
+            <p className="subtitle">Precision Document Reader • Sub-second Retrieval • Page Attribution</p>
           </div>
         </div>
 
@@ -325,28 +325,28 @@ export default function App() {
           <div className="status-badge">
             <span
               className="status-dot"
-              style={{ background: serverOnline ? '#34d399' : '#ef4444' }}
+              style={{ background: serverOnline ? '#10b981' : '#ef4444' }}
             />
-            {serverOnline ? 'Backend Active' : 'Backend Offline'}
+            {serverOnline ? 'System Online' : 'System Offline'}
           </div>
 
           <button
             className="prompt-chip"
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', background: 'rgba(168, 85, 247, 0.15)', borderColor: 'rgba(168, 85, 247, 0.4)' }}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: 'rgba(16, 185, 129, 0.12)', borderColor: 'rgba(16, 185, 129, 0.3)' }}
             onClick={() => setShowSettings(!showSettings)}
           >
-            <SlidersHorizontal size={15} /> Advanced
+            <SlidersHorizontal size={14} /> Advanced
           </button>
 
           {messages.length > 0 && (
-            <button className="prompt-chip" style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px' }} onClick={exportTranscript} title="Export QA log as Markdown">
-              <Download size={15} /> Export Log
+            <button className="prompt-chip" style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px' }} onClick={exportTranscript} title="Export QA log as Markdown">
+              <Download size={14} /> Export Log
             </button>
           )}
 
           {documents.length > 0 && (
             <button className="btn-reset" onClick={handleResetStore} title="Clear indexed knowledge store">
-              <Trash2 size={15} /> Clear Store
+              <Trash2 size={14} /> Clear Store
             </button>
           )}
         </div>
@@ -354,17 +354,17 @@ export default function App() {
 
       {/* Advanced Settings Drawer */}
       {showSettings && (
-        <div className="animate-fade-in" style={{ background: 'rgba(26, 19, 48, 0.95)', border: '1px solid var(--glass-border-focus)', padding: '16px 24px', borderRadius: 16, marginBottom: 18, display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.88rem', boxShadow: '0 8px 30px rgba(56, 189, 248, 0.2)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#34d399', fontWeight: 700 }}>
-              <ShieldCheck size={18} /> Fast ONNX Tensor Batching O(M/64) Active
+        <div className="animate-fade-in" style={{ background: 'rgba(13, 19, 33, 0.95)', border: '1px solid rgba(16, 185, 129, 0.35)', padding: '14px 20px', borderRadius: 14, marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.85rem', boxShadow: '0 8px 25px rgba(16, 185, 129, 0.15)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#10b981', fontWeight: 700 }}>
+              <ShieldCheck size={17} /> Fast ONNX Tensor Batching O(M/64) Active
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'var(--text-muted)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-muted)' }}>
               <span>Context Depth (Top K):</span>
               <select
                 value={topK}
                 onChange={(e) => setTopK(Number(e.target.value))}
-                style={{ background: 'rgba(11, 9, 26, 0.8)', color: '#fff', border: '1px solid var(--glass-border)', padding: '6px 12px', borderRadius: 8, outline: 'none', fontWeight: 'bold' }}
+                style={{ background: 'rgba(6, 9, 17, 0.8)', color: '#fff', border: '1px solid var(--glass-border)', padding: '5px 10px', borderRadius: 6, outline: 'none', fontWeight: 'bold' }}
               >
                 <option value={3}>3 Chunks (Fastest)</option>
                 <option value={5}>5 Chunks (Balanced)</option>
@@ -372,7 +372,7 @@ export default function App() {
               </select>
             </div>
           </div>
-          <span style={{ fontSize: '0.78rem', color: '#38bdf8', fontWeight: 600 }}>✨ Automatic Follow-up Suggestions Active</span>
+          <span style={{ fontSize: '0.76rem', color: '#6ee7b7', fontWeight: 600 }}>✨ Automatic Follow-up Suggestions Active</span>
         </div>
       )}
 
@@ -405,7 +405,7 @@ export default function App() {
               disabled={uploading}
             />
             <div className="dropzone-icon">
-              {uploading ? <Loader2 size={26} className="animate-spin" /> : <Upload size={26} />}
+              {uploading ? <Loader2 size={24} className="animate-spin" /> : <Upload size={24} />}
             </div>
             <div className="dropzone-text">
               {uploading ? 'Processing & Vector Indexing PDF…' : 'Drop your PDF here or Browse'}
@@ -414,13 +414,13 @@ export default function App() {
           </div>
 
           {/* Indexed Documents List & Summary Button */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, flex: 1, minHeight: 0 }}>
-            <div className="section-title" style={{ fontSize: '0.82rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, flex: 1, minHeight: 0 }}>
+            <div className="section-title" style={{ fontSize: '0.8rem' }}>
               <span>Indexed PDFs ({documents.length})</span>
             </div>
 
             {documents.length === 0 ? (
-              <div style={{ fontSize: '0.82rem', color: 'var(--text-dim)', textAlign: 'center', padding: '22px 0' }}>
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-dim)', textAlign: 'center', padding: '18px 0' }}>
                 No documents uploaded yet. Upload a PDF to start asking questions.
               </div>
             ) : (
@@ -428,7 +428,7 @@ export default function App() {
                 <div className="file-card-list">
                   {documents.map((doc, idx) => (
                     <div key={idx} className="file-card animate-fade-in">
-                      <FileText size={22} className="file-icon" />
+                      <FileText size={20} className="file-icon" />
                       <div className="file-info">
                         <div className="file-name" title={doc.filename}>{doc.filename}</div>
                         <div className="file-meta">
@@ -443,7 +443,7 @@ export default function App() {
                           )}
                         </div>
                       </div>
-                      <CheckCircle2 size={18} style={{ color: '#34d399' }} />
+                      <CheckCircle2 size={16} style={{ color: '#10b981' }} />
                     </div>
                   ))}
                 </div>
@@ -452,9 +452,9 @@ export default function App() {
                   className="btn-send"
                   onClick={handleSummarizePDF}
                   disabled={summarizing}
-                  style={{ marginTop: 8, background: 'linear-gradient(135deg, #a855f7, #38bdf8)', justifyContent: 'center' }}
+                  style={{ marginTop: 6, background: 'linear-gradient(135deg, #10b981, #06b6d4)', justifyContent: 'center' }}
                 >
-                  {summarizing ? <Loader2 size={18} className="animate-spin" /> : <FileSearch size={18} />}
+                  {summarizing ? <Loader2 size={16} className="animate-spin" /> : <FileSearch size={16} />}
                   <span>{summarizing ? 'Generating Summary…' : 'Summarize PDF'}</span>
                 </button>
               </>
@@ -467,7 +467,7 @@ export default function App() {
           {error && (
             <div className="error-banner animate-fade-in">
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <AlertCircle size={18} />
+                <AlertCircle size={16} />
                 <span>{error}</span>
               </div>
               <button
@@ -483,7 +483,7 @@ export default function App() {
             {messages.length === 0 ? (
               <div className="welcome-box animate-fade-in">
                 <div className="welcome-icon">
-                  <BookOpenCheck size={32} />
+                  <BookOpenCheck size={30} />
                 </div>
                 <h3 className="welcome-title">DocuQuery Document Assistant</h3>
                 <p className="welcome-desc">
@@ -492,7 +492,7 @@ export default function App() {
 
                 {documents.length > 0 && (
                   <div className="suggested-prompts">
-                    <div style={{ fontSize: '0.78rem', color: '#c084fc', marginBottom: 8, textAlign: 'left', fontWeight: 800 }}>
+                    <div style={{ fontSize: '0.75rem', color: '#6ee7b7', marginBottom: 6, textAlign: 'left', fontWeight: 800 }}>
                       SUGGESTED QUESTIONS
                     </div>
                     {samplePrompts.map((sp, i) => (
@@ -510,20 +510,20 @@ export default function App() {
                 return (
                   <div key={i} className={`msg-row ${m.role} animate-fade-in`}>
                     <div className="avatar">
-                      {m.role === 'user' ? <User size={18} /> : <BookOpenCheck size={18} />}
+                      {m.role === 'user' ? <User size={16} /> : <BookOpenCheck size={16} />}
                     </div>
 
-                    <div className="msg-bubble" style={isOutOfPdf ? { border: '1px solid rgba(239, 68, 68, 0.5)', background: 'rgba(239, 68, 68, 0.12)' } : {}}>
+                    <div className="msg-bubble" style={isOutOfPdf ? { border: '1px solid rgba(239, 68, 68, 0.4)', background: 'rgba(239, 68, 68, 0.1)' } : {}}>
                       {m.role === 'user' ? (
                         <div style={{ fontWeight: 500 }}>{m.text}</div>
                       ) : (
                         <>
                           {isOutOfPdf ? (
-                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, color: '#fca5a5' }}>
-                              <AlertTriangle size={22} style={{ flexShrink: 0, marginTop: 2, color: '#ef4444' }} />
+                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, color: '#fca5a5' }}>
+                              <AlertTriangle size={20} style={{ flexShrink: 0, marginTop: 2, color: '#ef4444' }} />
                               <div>
-                                <strong style={{ color: '#ef4444', fontSize: '0.96rem' }}>OUT OF PDF DOCUMENT</strong>
-                                <p style={{ marginTop: 6, fontSize: '0.9rem', color: '#fca5a5' }}>
+                                <strong style={{ color: '#ef4444', fontSize: '0.94rem' }}>OUT OF PDF DOCUMENT</strong>
+                                <p style={{ marginTop: 4, fontSize: '0.88rem', color: '#fca5a5' }}>
                                   The requested information is not mentioned in your uploaded PDF.
                                 </p>
                               </div>
@@ -533,7 +533,7 @@ export default function App() {
                           )}
 
                           {/* Copy Answer Button */}
-                          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 14 }}>
+                          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 12 }}>
                             <button
                               onClick={() => copyToClipboard(m.text, i)}
                               style={{
@@ -543,18 +543,18 @@ export default function App() {
                                 cursor: 'pointer',
                                 display: 'flex',
                                 alignItems: 'center',
-                                gap: 5,
-                                fontSize: '0.78rem',
+                                gap: 4,
+                                fontSize: '0.76rem',
                                 fontWeight: 600
                               }}
                             >
                               {copiedIndex === i ? (
                                 <>
-                                  <Check size={14} style={{ color: '#34d399' }} /> Copied
+                                  <Check size={13} style={{ color: '#10b981' }} /> Copied
                                 </>
                               ) : (
                                 <>
-                                  <Copy size={14} /> Copy
+                                  <Copy size={13} /> Copy
                                 </>
                               )}
                             </button>
@@ -565,7 +565,7 @@ export default function App() {
                             <div className="sources-box">
                               <button className="sources-toggle" onClick={() => toggleSources(i)}>
                                 <span>Retrieved Sources ({m.sources.length})</span>
-                                {openSources[i] ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+                                {openSources[i] ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                               </button>
 
                               {openSources[i] && (
@@ -578,7 +578,7 @@ export default function App() {
                                           <span className="source-page-badge">
                                             {s.confidence || 85}% Match
                                           </span>
-                                          <span className="source-page-badge" style={{ background: 'rgba(168, 85, 247, 0.22)', color: '#c084fc' }}>
+                                          <span className="source-page-badge" style={{ background: 'rgba(16, 185, 129, 0.18)', color: '#6ee7b7' }}>
                                             Page {s.page || 1}
                                           </span>
                                         </div>
@@ -603,10 +603,10 @@ export default function App() {
             {asking && (
               <div className="msg-row assistant animate-fade-in">
                 <div className="avatar">
-                  <BookOpenCheck size={18} />
+                  <BookOpenCheck size={16} />
                 </div>
-                <div className="msg-bubble" style={{ display: 'flex', alignItems: 'center', gap: 12, color: 'var(--text-muted)' }}>
-                  <Loader2 size={20} className="animate-spin" style={{ color: '#38bdf8' }} />
+                <div className="msg-bubble" style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'var(--text-muted)' }}>
+                  <Loader2 size={18} className="animate-spin" style={{ color: '#10b981' }} />
                   <span>Searching vector database & rendering interactive blocks…</span>
                 </div>
               </div>
@@ -635,7 +635,7 @@ export default function App() {
               disabled={asking || summarizing || !question.trim()}
             >
               <span>Ask</span>
-              <Send size={18} />
+              <Send size={16} />
             </button>
           </div>
         </section>
