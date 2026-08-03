@@ -113,8 +113,11 @@ async def ask_question(payload: AskRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.delete("/documents/{filename}")
-def delete_document(filename: str):
+@app.delete("/documents/{filename:path}")
+@app.delete("/documents")
+def delete_document(filename: str = None):
+    if not filename:
+        raise HTTPException(status_code=400, detail="Filename parameter is required.")
     try:
         rag.delete_document(filename)
         return {"status": "success", "message": f"Successfully deleted {filename}"}

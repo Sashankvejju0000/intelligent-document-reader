@@ -232,20 +232,24 @@ export default function App() {
   async function handleDeleteDocument(filename) {
     if (!window.confirm(`Are you sure you want to delete "${filename}"?`)) return
     try {
-      const res = await fetch(`${API_BASE}/documents/${encodeURIComponent(filename)}`, {
+      const res = await fetch(`${API_BASE}/documents?filename=${encodeURIComponent(filename)}`, {
         method: 'DELETE'
       })
-      if (!res.ok) throw new Error('Failed to delete document.')
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.detail || 'Failed to delete document.')
       
-      // Clean blob URL & update list
+      // Instantly remove from local documents list & blob map
+      setDocuments((prev) => prev.filter((d) => d.filename !== filename))
       setPdfBlobMap((prev) => {
         const copy = { ...prev }
         delete copy[filename]
         return copy
       })
+      setActiveDocIndex(0)
+      setSelectedPage(1)
       await fetchDocuments()
     } catch (err) {
-      setError(err.message)
+      setError('Delete error: ' + err.message)
     }
   }
 
