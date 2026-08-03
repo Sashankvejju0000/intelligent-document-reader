@@ -21,9 +21,6 @@ import {
   AlertTriangle,
   Zap,
   BookOpenCheck,
-  MoreVertical,
-  Info,
-  Sliders,
   ChevronLeft,
   ChevronRight,
   Bookmark,
@@ -32,7 +29,7 @@ import {
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
 
-// DocuQuery AI Vibrant Cyan Rounded Glass Logo Icon (Matching image_3.png)
+// DocuQuery AI Vibrant Cyan Rounded Glass Logo Icon
 const DocuQueryLogo = () => (
   <svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -137,6 +134,10 @@ export default function App() {
   const [serverOnline, setServerOnline] = useState(false)
   const [openSources, setOpenSources] = useState({})
   
+  // Dynamic Document Viewer State
+  const [selectedPage, setSelectedPage] = useState(1)
+  const [activeSnippet, setActiveSnippet] = useState('')
+  
   // Advanced Options
   const [topK, setTopK] = useState(5)
   const [showSettings, setShowSettings] = useState(false)
@@ -234,11 +235,21 @@ export default function App() {
         ...prev,
         { role: 'assistant', text: data.answer, sources: data.sources },
       ])
+
+      // Auto-jump PDF viewer to top matching source page & snippet!
+      if (data.sources && data.sources.length > 0) {
+        jumpToPage(data.sources[0].page || 1, data.sources[0].chunk_text || '')
+      }
     } catch (err) {
       setError(err.message)
     } finally {
       setAsking(false)
     }
+  }
+
+  function jumpToPage(pageNum, snippetText = '') {
+    setSelectedPage(pageNum)
+    if (snippetText) setActiveSnippet(snippetText)
   }
 
   async function handleSummarizePDF() {
@@ -273,6 +284,8 @@ export default function App() {
       await fetch(`${API_BASE}/reset`, { method: 'POST' })
       setDocuments([])
       setMessages([])
+      setSelectedPage(1)
+      setActiveSnippet('')
       setError('')
     } catch (err) {
       setError('Failed to reset store: ' + err.message)
@@ -305,15 +318,12 @@ export default function App() {
     setOpenSources((prev) => ({ ...prev, [index]: !prev[index] }))
   }
 
-  // Pre-populated demo document cards matching image_3.png if documents list is empty
-  const displayDocs = documents.length > 0 ? documents : [
-    { filename: 'doc_v1.pdf', pages: 85, chunks: 85, words: 12450, size: '12MB', progress: 100 },
-    { filename: 'research_v3.pdf', pages: 22, chunks: 22, words: 5120, size: '5MB', progress: 80 }
-  ]
+  const activeDoc = documents.length > 0 ? documents[0] : null
+  const maxPages = activeDoc ? activeDoc.pages : 1
 
   return (
     <div className="app-container">
-      {/* Header Banner (Exact match to image_3.png) */}
+      {/* Header Banner */}
       <header className="header-banner">
         <div className="logo-group">
           <div className="logo-box">
@@ -390,7 +400,7 @@ export default function App() {
             <BookOpen size={16} />
           </div>
 
-          {/* Refined PDF Drop Zone */}
+          {/* PDF Drop Zone */}
           <div
             className={`dropzone-box ${isDragOver ? 'active' : ''}`}
             onDragOver={(e) => {
@@ -420,57 +430,65 @@ export default function App() {
             </div>
           </div>
 
-          {/* Indexed PDFs Section */}
+          {/* INDEXED PDFS Section (ONLY SHOW WHEN PDF IS ACTUALLY UPLOADED) */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, flex: 1, minHeight: 0 }}>
             <div className="panel-section-header" style={{ fontSize: '0.8rem' }}>
-              <span>INDEXED PDFS ({displayDocs.length})</span>
+              <span>INDEXED PDFS ({documents.length})</span>
             </div>
 
-            <div className="file-card-group">
-              {displayDocs.map((doc, idx) => (
-                <div key={idx} className="pdf-card animate-fade-in">
-                  <div className="pdf-thumb-box">
-                    <FileText size={20} />
-                  </div>
-                  <div className="pdf-details">
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div className="pdf-filename" title={doc.filename}>{doc.filename}</div>
-                      {doc.progress && doc.progress < 100 ? (
-                        <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#00C9A7' }}>{doc.progress}%</span>
-                      ) : (
-                        <CheckCircle2 size={16} style={{ color: '#00C9A7' }} />
-                      )}
+            {documents.length === 0 ? (
+              <div style={{ fontSize: '0.82rem', color: 'rgba(240, 253, 250, 0.5)', textAlign: 'center', padding: '24px 12px', border: '1px dashed rgba(0, 201, 167, 0.2)', borderRadius: 12 }}>
+                No PDF documents uploaded yet. Upload a PDF file above to start questioning.
+              </div>
+            ) : (
+              <>
+                <div className="file-card-group">
+                  {documents.map((doc, idx) => (
+                    <div key={idx} className="pdf-card animate-fade-in" style={{ borderLeft: '3px solid #00C9A7' }}>
+                      <div className="pdf-thumb-box">
+                        <FileText size={20} />
+                      </div>
+                      <div className="pdf-details">
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div className="pdf-filename" title={doc.filename}>{doc.filename}</div>
+                          <CheckCircle2 size={16} style={{ color: '#00C9A7' }} />
+                        </div>
+                        <div className="pdf-meta-line">
+                          <span>{doc.pages || 1} Pages</span>
+                          <span>•</span>
+                          <span>{doc.chunks} chunks</span>
+                          {doc.words > 0 && (
+                            <>
+                              <span>•</span>
+                              <span>{doc.words.toLocaleString()} words</span>
+                            </>
+                          )}
+                        </div>
+                        <div className="progress-bar-bg">
+                          <div className="progress-bar-fill" style={{ width: '100%' }} />
+                        </div>
+                      </div>
                     </div>
-                    <div className="pdf-meta-line">
-                      <span>{doc.size || '12MB'}</span>
-                      <span>•</span>
-                      <span>{doc.pages || 1} Pages</span>
-                    </div>
-                    <div className="progress-bar-bg">
-                      <div className="progress-bar-fill" style={{ width: `${doc.progress || 100}%` }} />
-                    </div>
-                  </div>
+                  ))}
                 </div>
-              ))}
-            </div>
 
-            {documents.length > 0 && (
-              <button
-                className="btn-ask-glowing"
-                onClick={handleSummarizePDF}
-                disabled={summarizing}
-                style={{ marginTop: 8, justifyContent: 'center' }}
-              >
-                {summarizing ? <Loader2 size={18} className="animate-spin" /> : <FileSearch size={18} />}
-                <span>{summarizing ? 'Generating Summary…' : 'Summarize PDF'}</span>
-              </button>
+                <button
+                  className="btn-ask-glowing"
+                  onClick={handleSummarizePDF}
+                  disabled={summarizing}
+                  style={{ marginTop: 8, justifyContent: 'center' }}
+                >
+                  {summarizing ? <Loader2 size={18} className="animate-spin" /> : <FileSearch size={18} />}
+                  <span>{summarizing ? 'Generating Summary…' : 'Summarize PDF'}</span>
+                </button>
+              </>
             )}
           </div>
         </aside>
 
-        {/* Central Interaction Window (Matching image_3.png) */}
+        {/* Central Interaction Window */}
         <main className="central-window">
-          {/* Neural Network Node Graphic Graphic */}
+          {/* Neural Network Graphic Overlay */}
           <svg className="neural-graphic" width="180" height="120" viewBox="0 0 200 140" fill="none">
             <circle cx="160" cy="30" r="6" fill="#00C9A7" />
             <circle cx="180" cy="60" r="5" fill="#06b6d4" />
@@ -482,7 +500,7 @@ export default function App() {
             <line x1="120" y1="50" x2="150" y2="90" stroke="#00C9A7" strokeWidth="1.5" />
           </svg>
 
-          {/* Overlaid Central Welcome Card Modal (Matching image_3.png) */}
+          {/* Overlaid Central Welcome Modal (Shows only when no messages exist) */}
           {messages.length === 0 && (
             <div className="central-overlay-modal animate-fade-in">
               <div className="modal-logo-icon">
@@ -497,33 +515,59 @@ export default function App() {
 
           {/* Split Interaction View */}
           <div className="split-view-container">
-            {/* Left Side: Document Preview Pane */}
+            {/* Left Side: Document Preview Pane with Dynamic Page Jumps */}
             <div className="doc-preview-pane">
               <div className="pane-toolbar">
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <Sidebar size={16} style={{ cursor: 'pointer' }} />
+                  <Sidebar size={16} />
                   <FileText size={16} />
-                  <span style={{ fontWeight: 600 }}>Page 12: Findings on...</span>
+                  <span style={{ fontWeight: 600 }}>
+                    {activeDoc ? activeDoc.filename : 'Document Preview'}
+                  </span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <ChevronLeft size={16} style={{ cursor: 'pointer' }} />
-                  <span>12 / 85</span>
-                  <ChevronRight size={16} style={{ cursor: 'pointer' }} />
-                  <Bookmark size={16} style={{ marginLeft: 6, cursor: 'pointer' }} />
+                  <button
+                    onClick={() => setSelectedPage(Math.max(1, selectedPage - 1))}
+                    disabled={selectedPage <= 1}
+                    style={{ background: 'none', border: 'none', color: '#00C9A7', cursor: 'pointer' }}
+                  >
+                    <ChevronLeft size={18} />
+                  </button>
+                  <span style={{ fontWeight: 'bold', color: '#00C9A7' }}>
+                    Page {selectedPage} / {maxPages}
+                  </span>
+                  <button
+                    onClick={() => setSelectedPage(Math.min(maxPages, selectedPage + 1))}
+                    disabled={selectedPage >= maxPages}
+                    style={{ background: 'none', border: 'none', color: '#00C9A7', cursor: 'pointer' }}
+                  >
+                    <ChevronRight size={18} />
+                  </button>
+                  <Bookmark size={16} style={{ marginLeft: 6, color: '#00C9A7' }} />
                 </div>
               </div>
 
               <div className="doc-paper-view">
-                <h4 style={{ fontSize: '1rem', fontWeight: 'bold', marginBottom: 8 }}>1. Introduction</h4>
-                <p style={{ marginBottom: 12 }}>
-                  Modern document processing workflow requires high throughput extraction of information from structured formats. Previous methods suffered from high latency and accuracy degradation over long context lengths.
-                </p>
-                <p style={{ marginBottom: 12 }}>
-                  The research presented in this document establishes <span className="doc-highlight">new metrics for parallel vector embeddings</span> and dense retrieval accuracy across domain-specific PDF datasets <span className="citation-link">[12, 18, 33]</span>.
-                </p>
-                <p style={{ marginBottom: 12 }}>
-                  Our experimental benchmarks show <span className="doc-highlight">a 2-270% performance gain</span> across all tested model variations <span className="citation-link">[12, 23, 33]</span>.
-                </p>
+                <h4 style={{ fontSize: '1.05rem', fontWeight: 'bold', marginBottom: 10, color: '#0f172a' }}>
+                  📄 Document Page {selectedPage} Content
+                </h4>
+
+                {activeSnippet ? (
+                  <div style={{ marginBottom: 14 }}>
+                    <div style={{ fontSize: '0.78rem', color: '#0284c7', fontWeight: 'bold', marginBottom: 6 }}>
+                      🎯 RETRIEVED EXCERPT FROM PAGE {selectedPage}:
+                    </div>
+                    <p className="doc-highlight" style={{ fontSize: '0.92rem', lineHeight: '1.6', color: '#0f172a', fontWeight: '500' }}>
+                      "{activeSnippet}"
+                    </p>
+                  </div>
+                ) : (
+                  <p style={{ marginBottom: 12, fontStyle: 'italic', color: '#475569' }}>
+                    {activeDoc
+                      ? `Viewing Page ${selectedPage} of ${activeDoc.filename}. Ask any question or click a page citation to view extracted snippets.`
+                      : 'Upload a PDF on the left. Once indexed, you can jump directly to any page cited in your answers.'}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -585,7 +629,7 @@ export default function App() {
                             </button>
                           </div>
 
-                          {/* Sources Accordion */}
+                          {/* Sources Accordion with Clickable Page Navigation */}
                           {m.sources && m.sources.length > 0 && !isOutOfPdf && (
                             <div className="sources-box">
                               <button className="sources-toggle" onClick={() => toggleSources(i)}>
@@ -596,13 +640,19 @@ export default function App() {
                               {openSources[i] && (
                                 <div className="sources-list animate-fade-in">
                                   {m.sources.map((s, j) => (
-                                    <div key={j} className="source-item">
+                                    <div
+                                      key={j}
+                                      className="source-item"
+                                      onClick={() => jumpToPage(s.page || 1, s.chunk_text || '')}
+                                      style={{ cursor: 'pointer' }}
+                                      title="Click to jump to this page in the PDF viewer"
+                                    >
                                       <div className="source-header">
                                         <span className="source-doc-name">{s.document}</span>
                                         <div style={{ display: 'flex', gap: 6 }}>
                                           <span className="source-page-badge">{s.confidence || 85}% Match</span>
-                                          <span className="source-page-badge" style={{ background: 'rgba(0, 201, 167, 0.2)', color: '#00C9A7' }}>
-                                            Page {s.page || 1}
+                                          <span className="source-page-badge" style={{ background: 'rgba(0, 201, 167, 0.25)', color: '#00C9A7', fontWeight: 'bold' }}>
+                                            👉 Open Page {s.page || 1}
                                           </span>
                                         </div>
                                       </div>
@@ -629,7 +679,7 @@ export default function App() {
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#00C9A7', fontSize: '0.88rem' }}>
                     <Loader2 size={18} className="animate-spin" />
-                    <span>AI is thinking…</span>
+                    <span>AI is thinking & extracting page references…</span>
                   </div>
                 </div>
               )}
@@ -639,7 +689,7 @@ export default function App() {
         </main>
       </div>
 
-      {/* Full-Width Bottom Interaction Bar (Matching image_3.png) */}
+      {/* Full-Width Bottom Interaction Bar */}
       <footer className="bottom-prompt-bar">
         <input
           type="text"
