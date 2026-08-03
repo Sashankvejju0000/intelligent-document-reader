@@ -24,7 +24,10 @@ import {
   ChevronLeft,
   ChevronRight,
   Bookmark,
-  Sidebar
+  Sidebar,
+  Maximize2,
+  ExternalLink,
+  X
 } from 'lucide-react'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
@@ -136,11 +139,12 @@ export default function App() {
   const [serverOnline, setServerOnline] = useState(false)
   const [openSources, setOpenSources] = useState({})
   
-  // Real PDF Blob Map for Multiple Documents
+  // Real PDF Blob Map & Viewer State
   const [pdfBlobMap, setPdfBlobMap] = useState({}) // { filename: blobUrl }
   const [selectedPage, setSelectedPage] = useState(1)
   const [activeSnippet, setActiveSnippet] = useState('')
   const [viewKey, setViewKey] = useState(0)
+  const [isFullPdfViewerOpen, setIsFullPdfViewerOpen] = useState(false)
   
   // Advanced Options
   const [topK, setTopK] = useState(5)
@@ -438,6 +442,51 @@ export default function App() {
         </div>
       )}
 
+      {/* Full-Screen PDF Viewer Modal Overlay */}
+      {isFullPdfViewerOpen && (
+        <div className="animate-fade-in" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(6, 17, 20, 0.96)', backdropFilter: 'blur(30px)', zIndex: 9999, display: 'flex', flexDirection: 'column', padding: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, padding: '10px 20px', background: 'rgba(10, 26, 30, 0.9)', border: '1px solid var(--glass-border)', borderRadius: 14 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <FileText size={22} style={{ color: '#00C9A7' }} />
+              <span style={{ fontSize: '1.1rem', fontWeight: 800, color: '#fff' }}>
+                📖 {activeDoc ? activeDoc.filename : 'Full PDF Viewer'}
+              </span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+              <button onClick={() => jumpToPage(Math.max(1, selectedPage - 1))} disabled={selectedPage <= 1} style={{ background: 'none', border: 'none', color: '#00C9A7', cursor: 'pointer' }}>
+                <ChevronLeft size={22} />
+              </button>
+              <span style={{ fontWeight: 'bold', color: '#00C9A7', fontSize: '1rem' }}>
+                Page {selectedPage} / {maxPages}
+              </span>
+              <button onClick={() => jumpToPage(Math.min(maxPages, selectedPage + 1))} disabled={selectedPage >= maxPages} style={{ background: 'none', border: 'none', color: '#00C9A7', cursor: 'pointer' }}>
+                <ChevronRight size={22} />
+              </button>
+              {currentBlobUrl && (
+                <button className="btn-advanced" onClick={() => window.open(currentBlobUrl, '_blank')}>
+                  <ExternalLink size={14} /> Open in New Tab
+                </button>
+              )}
+              <button onClick={() => setIsFullPdfViewerOpen(false)} style={{ background: 'rgba(239, 68, 68, 0.2)', border: '1px solid rgba(239, 68, 68, 0.4)', color: '#fca5a5', borderRadius: '50%', width: 34, height: 34, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <X size={20} />
+              </button>
+            </div>
+          </div>
+          {currentBlobUrl ? (
+            <iframe
+              key={`modal-pdf-${activeDoc?.filename}-${viewKey}-${selectedPage}`}
+              src={`${currentBlobUrl}#page=${selectedPage}`}
+              style={{ width: '100%', height: 'calc(100vh - 100px)', border: 'none', borderRadius: 14, background: '#fff' }}
+              title="Full PDF Viewer"
+            />
+          ) : (
+            <div style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>
+              No active PDF file loaded. Upload a PDF on the left.
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Main Dual Panel Layout */}
       <div className="main-layout">
         {/* Left Sidebar: KNOWLEDGE BASE Panel */}
@@ -447,7 +496,7 @@ export default function App() {
             <BookOpen size={16} />
           </div>
 
-          {/* PDF Drop Zone (Supports Multi-File Selection) */}
+          {/* PDF Drop Zone */}
           <div
             className={`dropzone-box ${isDragOver ? 'active' : ''}`}
             onDragOver={(e) => {
@@ -478,7 +527,7 @@ export default function App() {
             </div>
           </div>
 
-          {/* INDEXED PDFS Section with Delete Buttons */}
+          {/* INDEXED PDFS Section */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, flex: 1, minHeight: 0 }}>
             <div className="panel-section-header" style={{ fontSize: '0.8rem' }}>
               <span>INDEXED PDFS ({documents.length})</span>
@@ -585,7 +634,7 @@ export default function App() {
 
           {/* Split Interaction View */}
           <div className="split-view-container">
-            {/* Left Side: Real PDF Document Previewer with Multi-Doc Switcher */}
+            {/* Left Side: Real PDF Document Previewer */}
             <div className="doc-preview-pane">
               <div className="pane-toolbar">
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -609,6 +658,7 @@ export default function App() {
                     </span>
                   )}
                 </div>
+
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <button
                     onClick={() => jumpToPage(Math.max(1, selectedPage - 1))}
@@ -627,7 +677,16 @@ export default function App() {
                   >
                     <ChevronRight size={18} />
                   </button>
-                  <Bookmark size={16} style={{ marginLeft: 6, color: '#00C9A7' }} />
+                  
+                  {/* Full PDF Viewer Action Button */}
+                  <button
+                    onClick={() => setIsFullPdfViewerOpen(true)}
+                    className="btn-advanced"
+                    style={{ padding: '4px 10px', fontSize: '0.76rem', background: 'rgba(0, 201, 167, 0.2)', marginLeft: 4 }}
+                    title="Open Full PDF Viewer"
+                  >
+                    <Maximize2 size={13} /> Full PDF View
+                  </button>
                 </div>
               </div>
 
