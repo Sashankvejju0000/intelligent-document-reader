@@ -27,7 +27,9 @@ import {
   Sidebar,
   Maximize2,
   ExternalLink,
-  X
+  X,
+  PanelLeftClose,
+  PanelLeftOpen
 } from 'lucide-react'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
@@ -139,6 +141,9 @@ export default function App() {
   const [serverOnline, setServerOnline] = useState(false)
   const [openSources, setOpenSources] = useState({})
   
+  // Sidebar Slide Toggle State
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
+  
   // Real PDF Blob Map & Viewer State
   const [pdfBlobMap, setPdfBlobMap] = useState({}) // { filename: blobUrl }
   const [selectedPage, setSelectedPage] = useState(1)
@@ -184,7 +189,7 @@ export default function App() {
     }
   }
 
-  // Multi-file PDF Upload Handler
+  // Multi-file PDF Upload Handler with Automatic Sidebar Toggle Slide
   async function uploadFiles(files) {
     if (!files || files.length === 0) return
 
@@ -221,6 +226,9 @@ export default function App() {
     await fetchDocuments()
     setUploading(false)
     if (fileInputRef.current) fileInputRef.current.value = ''
+
+    // Automatically toggle collapse sidebar to left slide for maximum screen space!
+    setIsSidebarCollapsed(true)
   }
 
   function handleFileSelect(e) {
@@ -337,6 +345,7 @@ export default function App() {
       setSelectedPage(1)
       setActiveSnippet('')
       setError('')
+      setIsSidebarCollapsed(false)
     } catch (err) {
       setError('Failed to reset store: ' + err.message)
     }
@@ -377,6 +386,16 @@ export default function App() {
       {/* Header Banner */}
       <header className="header-banner">
         <div className="logo-group">
+          {/* Toggle Sidebar Button */}
+          <button
+            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+            className="btn-advanced"
+            style={{ padding: '8px 12px', background: isSidebarCollapsed ? 'rgba(0, 201, 167, 0.25)' : 'rgba(0, 201, 167, 0.1)' }}
+            title={isSidebarCollapsed ? "Expand Knowledge Base Sidebar" : "Collapse Sidebar to Left Slide"}
+          >
+            {isSidebarCollapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
+          </button>
+
           <div className="logo-box">
             <DocuQueryLogo />
           </div>
@@ -488,12 +507,18 @@ export default function App() {
       )}
 
       {/* Main Dual Panel Layout */}
-      <div className="main-layout">
-        {/* Left Sidebar: KNOWLEDGE BASE Panel */}
+      <div className={`main-layout ${isSidebarCollapsed ? 'collapsed' : ''}`}>
+        {/* Left Sidebar: KNOWLEDGE BASE Panel (Collapses to Left Slide) */}
         <aside className="sidebar-panel">
           <div className="panel-section-header">
             <span>KNOWLEDGE BASE</span>
-            <BookOpen size={16} />
+            <button
+              onClick={() => setIsSidebarCollapsed(true)}
+              style={{ background: 'none', border: 'none', color: '#00C9A7', cursor: 'pointer' }}
+              title="Slide Collapse Sidebar"
+            >
+              <PanelLeftClose size={16} />
+            </button>
           </div>
 
           {/* PDF Drop Zone */}
@@ -638,6 +663,15 @@ export default function App() {
             <div className="doc-preview-pane">
               <div className="pane-toolbar">
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  {isSidebarCollapsed && (
+                    <button
+                      onClick={() => setIsSidebarCollapsed(false)}
+                      style={{ background: 'none', border: 'none', color: '#00C9A7', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                      title="Show Knowledge Base Sidebar"
+                    >
+                      <PanelLeftOpen size={18} />
+                    </button>
+                  )}
                   <Sidebar size={16} />
                   {documents.length > 1 ? (
                     <select

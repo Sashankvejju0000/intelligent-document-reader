@@ -57,7 +57,7 @@ body {
   overflow-x: hidden;
 }
 
-/* Custom Sleek Scrollbars */
+/* Custom Scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -106,7 +106,7 @@ body {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  max-width: 1460px;
+  max-width: 1540px;
   margin: 0 auto;
   padding: 16px;
   gap: 16px;
@@ -145,8 +145,8 @@ body {
 }
 
 .logo-box {
-  width: 48px;
-  height: 48px;
+  width: 46px;
+  height: 46px;
   background: linear-gradient(135deg, #00C9A7, #06b6d4);
   border-radius: 14px;
   display: flex;
@@ -159,7 +159,7 @@ body {
 
 .header-title {
   font-family: var(--font-heading);
-  font-size: 1.55rem;
+  font-size: 1.5rem;
   font-weight: 800;
   letter-spacing: -0.02em;
   color: #ffffff;
@@ -169,7 +169,7 @@ body {
 }
 
 .header-subtitle {
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   color: rgba(240, 253, 250, 0.7);
   font-weight: 500;
 }
@@ -177,7 +177,7 @@ body {
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
 }
 
 .status-badge {
@@ -206,7 +206,7 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 18px;
+  padding: 8px 16px;
   background: rgba(0, 201, 167, 0.1);
   border: 1px solid rgba(0, 201, 167, 0.35);
   border-radius: 20px;
@@ -223,13 +223,19 @@ body {
   box-shadow: 0 0 20px rgba(0, 201, 167, 0.3);
 }
 
-/* Main Dual Panel Layout */
+/* Dynamic Collapsible Layout */
 .main-layout {
   display: grid;
-  grid-template-columns: 350px 1fr;
+  grid-template-columns: 320px 1fr;
   gap: 16px;
   flex: 1;
   min-height: 0;
+  transition: grid-template-columns 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.main-layout.collapsed {
+  grid-template-columns: 0px 1fr;
+  gap: 0px;
 }
 
 @media (max-width: 960px) {
@@ -239,19 +245,32 @@ body {
   }
 }
 
-/* Sidebar Panel */
+/* Sidebar Panel with Smooth Slide Animation */
 .sidebar-panel {
   background: rgba(10, 26, 30, 0.85);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-md);
-  padding: 22px;
+  padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 18px;
   overflow-y: auto;
   box-shadow: var(--shadow-lg);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  opacity: 1;
+  visibility: visible;
+  width: 320px;
+}
+
+.main-layout.collapsed .sidebar-panel {
+  opacity: 0;
+  visibility: hidden;
+  padding: 0;
+  width: 0;
+  border: none;
+  overflow: hidden;
 }
 
 .panel-section-header {
@@ -270,7 +289,7 @@ body {
 .dropzone-box {
   border: 2px dashed rgba(0, 201, 167, 0.4);
   border-radius: var(--radius-md);
-  padding: 28px 20px;
+  padding: 24px 16px;
   text-align: center;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -287,9 +306,9 @@ body {
 }
 
 .dropzone-circle {
-  width: 52px;
-  height: 52px;
-  margin: 0 auto 14px;
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 12px;
   background: rgba(0, 201, 167, 0.18);
   border: 1px solid rgba(0, 201, 167, 0.4);
   border-radius: 50%;
@@ -309,14 +328,14 @@ body {
 }
 
 .dropzone-title {
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   font-weight: 700;
   color: #ffffff;
   margin-bottom: 4px;
 }
 
 .dropzone-subtitle {
-  font-size: 0.75rem;
+  font-size: 0.74rem;
   color: rgba(240, 253, 250, 0.65);
   line-height: 1.4;
 }
@@ -325,14 +344,14 @@ body {
 .file-card-group {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 .pdf-card {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 14px 16px;
+  gap: 12px;
+  padding: 12px 14px;
   background: rgba(13, 33, 39, 0.6);
   border: 1px solid rgba(0, 201, 167, 0.2);
   border-radius: var(--radius-sm);
@@ -347,8 +366,8 @@ body {
 }
 
 .pdf-thumb-box {
-  width: 38px;
-  height: 46px;
+  width: 36px;
+  height: 44px;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 6px;
@@ -365,7 +384,7 @@ body {
 }
 
 .pdf-filename {
-  font-size: 0.88rem;
+  font-size: 0.86rem;
   font-weight: 700;
   color: #ffffff;
   white-space: nowrap;
@@ -374,7 +393,7 @@ body {
 }
 
 .pdf-meta-line {
-  font-size: 0.74rem;
+  font-size: 0.73rem;
   color: rgba(240, 253, 250, 0.65);
   margin-top: 3px;
   display: flex;
@@ -398,9 +417,7 @@ body {
   transition: width 0.3s ease;
 }
 
-/* ==========================================================================
-   CENTRAL INTERACTION WINDOW
-   ========================================================================== */
+/* Central Interaction Window with Spacious Split Ratio */
 .central-window {
   background: rgba(10, 26, 30, 0.85);
   backdrop-filter: blur(24px);
@@ -412,6 +429,7 @@ body {
   overflow: hidden;
   box-shadow: var(--shadow-lg), var(--shadow-teal-glow);
   position: relative;
+  flex: 1;
 }
 
 .neural-graphic {
@@ -422,12 +440,13 @@ body {
   pointer-events: none;
 }
 
+/* Spacious Split View Container (50% PDF Viewer / 50% Chat Area) */
 .split-view-container {
   display: grid;
   grid-template-columns: 1fr 1fr;
   flex: 1;
   min-height: 0;
-  gap: 16px;
+  gap: 20px;
   padding: 20px;
 }
 
@@ -437,7 +456,7 @@ body {
   }
 }
 
-/* Left Document Preview Pane with Real PDF iframe */
+/* Left Document Preview Pane */
 .doc-preview-pane {
   background: rgba(6, 17, 20, 0.7);
   border: 1px solid rgba(0, 201, 167, 0.25);
@@ -446,16 +465,17 @@ body {
   flex-direction: column;
   overflow: hidden;
   position: relative;
+  min-height: 450px;
 }
 
 .pane-toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 16px;
+  padding: 12px 18px;
   background: rgba(13, 33, 39, 0.95);
   border-bottom: 1px solid rgba(0, 201, 167, 0.25);
-  font-size: 0.82rem;
+  font-size: 0.84rem;
   color: #f0fdfa;
   z-index: 2;
 }
@@ -470,18 +490,18 @@ body {
 
 .doc-paper-view {
   flex: 1;
-  padding: 24px;
+  padding: 26px;
   overflow-y: auto;
   background: rgba(255, 255, 255, 0.97);
   color: #0f172a;
-  font-size: 0.9rem;
-  line-height: 1.65;
+  font-size: 0.92rem;
+  line-height: 1.68;
 }
 
 .doc-highlight {
   background: rgba(0, 201, 167, 0.22);
   border-left: 3px solid #00C9A7;
-  padding: 8px 12px;
+  padding: 10px 14px;
   border-radius: 6px;
   margin-top: 8px;
 }
@@ -490,7 +510,7 @@ body {
 .response-pane {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
   min-height: 0;
   overflow-y: auto;
 }
@@ -502,10 +522,7 @@ body {
   font-weight: 700;
 }
 
-/* ==========================================================================
-   ULTRA-CLEAN UNCLUTTERED BLOCK-WISE RESPONSE COMPONENTS
-   ========================================================================== */
-
+/* Clean Spaced Response Blocks */
 .block-container {
   display: flex;
   flex-direction: column;
@@ -643,27 +660,6 @@ body {
   border-color: #00C9A7;
   transform: translateX(6px);
   box-shadow: 0 4px 18px rgba(0, 201, 167, 0.3);
-}
-
-.sug-icon {
-  font-size: 0.95rem;
-  margin-right: 8px;
-}
-
-.sug-text {
-  flex: 1;
-}
-
-.sug-arrow {
-  color: #00C9A7;
-  font-weight: bold;
-  opacity: 0.7;
-  transition: transform 0.2s ease, opacity 0.2s ease;
-}
-
-.interactive-sug-card:hover .sug-arrow {
-  opacity: 1;
-  transform: translateX(4px);
 }
 
 /* Bottom Interaction Bar */
