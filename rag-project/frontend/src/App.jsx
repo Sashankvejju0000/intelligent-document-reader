@@ -20,19 +20,27 @@ import {
   ShieldCheck,
   AlertTriangle,
   Zap,
-  BookOpenCheck
+  BookOpenCheck,
+  MoreVertical,
+  Info,
+  Sliders,
+  ChevronLeft,
+  ChevronRight,
+  Bookmark,
+  Sidebar
 } from 'lucide-react'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
 
-// Custom Human-Crafted Brand Logo Mark (Document + Precision Search Emblem)
-const DocuLogo = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M14 2V8H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M8 12H13" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-    <path d="M8 16H11" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-    <circle cx="16" cy="16" r="3" fill="#10b981" stroke="#060911" strokeWidth="1.5"/>
+// DocuQuery AI Vibrant Cyan Rounded Glass Logo Icon (Matching image_3.png)
+const DocuQueryLogo = () => (
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M14 2V8H20" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M8 12H13" stroke="#ffffff" strokeWidth="2" strokeLinecap="round"/>
+    <path d="M8 16H11" stroke="#ffffff" strokeWidth="2" strokeLinecap="round"/>
+    <circle cx="16" cy="16" r="3.5" fill="#00C9A7" stroke="#061114" strokeWidth="1.5"/>
+    <path d="M18.5 18.5L21 21" stroke="#00C9A7" strokeWidth="2" strokeLinecap="round"/>
   </svg>
 )
 
@@ -50,7 +58,6 @@ const MessageBlockRenderer = ({ text, handleAsk }) => {
         const trimmed = section.trim()
         if (!trimmed) return null
 
-        // Section 1: Related Follow-up Suggestions Block
         if (trimmed.includes('💡 Related Questions You Might Ask:') || trimmed.includes('Related Follow-up Suggestions')) {
           const suggestions = trimmed
             .replace(/.*Related.* Suggestions:?/i, '')
@@ -62,7 +69,7 @@ const MessageBlockRenderer = ({ text, handleAsk }) => {
           return (
             <div key={idx} className="suggestion-block-card animate-fade-in">
               <div className="block-card-header">
-                <Zap size={16} style={{ color: '#10b981' }} />
+                <Zap size={16} style={{ color: '#00C9A7' }} />
                 <span>Suggested Follow-up Questions</span>
               </div>
               <div className="suggestion-grid">
@@ -78,7 +85,6 @@ const MessageBlockRenderer = ({ text, handleAsk }) => {
           )
         }
 
-        // Section 2: Header Cards
         if (trimmed.startsWith('#') || (trimmed.startsWith('**') && trimmed.endsWith('**') && trimmed.length < 70)) {
           const headerText = trimmed.replace(/^#+\s*/, '').replace(/\*\*/g, '')
           return (
@@ -89,7 +95,6 @@ const MessageBlockRenderer = ({ text, handleAsk }) => {
           )
         }
 
-        // Section 3: List Item Block Cards
         if (trimmed.split('\n').some((line) => /^[0-9\.\-\*\•]/.test(line.trim()))) {
           const listItems = trimmed.split('\n').filter((l) => l.trim().length > 0)
           return (
@@ -109,7 +114,6 @@ const MessageBlockRenderer = ({ text, handleAsk }) => {
           )
         }
 
-        // Section 4: Paragraph Glass Card
         return (
           <div key={idx} className="block-para-card animate-fade-in">
             <ReactMarkdown>{trimmed}</ReactMarkdown>
@@ -301,52 +305,53 @@ export default function App() {
     setOpenSources((prev) => ({ ...prev, [index]: !prev[index] }))
   }
 
-  const samplePrompts = [
-    'Summarize the key points of the uploaded document.',
-    'What are the main findings or conclusions?',
-    'List any specific dates, numbers, or metrics mentioned.',
+  // Pre-populated demo document cards matching image_3.png if documents list is empty
+  const displayDocs = documents.length > 0 ? documents : [
+    { filename: 'doc_v1.pdf', pages: 85, chunks: 85, words: 12450, size: '12MB', progress: 100 },
+    { filename: 'research_v3.pdf', pages: 22, chunks: 22, words: 5120, size: '5MB', progress: 80 }
   ]
 
   return (
     <div className="app-container">
-      {/* Header with Human-Crafted Brand Logo Mark */}
-      <header className="header">
+      {/* Header Banner (Exact match to image_3.png) */}
+      <header className="header-banner">
         <div className="logo-group">
-          <div className="logo-icon">
-            <DocuLogo />
+          <div className="logo-box">
+            <DocuQueryLogo />
           </div>
           <div>
-            <h1 className="title">DocuQuery AI</h1>
-            <p className="subtitle">Precision Document Reader • Sub-second Retrieval • Page Attribution</p>
+            <h1 className="header-title">DocuQuery AI</h1>
+            <p className="header-subtitle">
+              Next-Gen Intelligent Document Reader • Instant Knowledge Extraction • Precise Attribution
+            </p>
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div className="header-actions">
           <div className="status-badge">
             <span
               className="status-dot"
-              style={{ background: serverOnline ? '#10b981' : '#ef4444' }}
+              style={{ background: serverOnline ? '#00C9A7' : '#ef4444' }}
             />
             {serverOnline ? 'System Online' : 'System Offline'}
           </div>
 
           <button
-            className="prompt-chip"
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: 'rgba(16, 185, 129, 0.12)', borderColor: 'rgba(16, 185, 129, 0.3)' }}
+            className="btn-advanced"
             onClick={() => setShowSettings(!showSettings)}
           >
-            <SlidersHorizontal size={14} /> Advanced
+            <SlidersHorizontal size={15} /> Advanced
           </button>
 
           {messages.length > 0 && (
-            <button className="prompt-chip" style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px' }} onClick={exportTranscript} title="Export QA log as Markdown">
-              <Download size={14} /> Export Log
+            <button className="btn-advanced" onClick={exportTranscript} title="Export QA log as Markdown">
+              <Download size={15} /> Export Log
             </button>
           )}
 
           {documents.length > 0 && (
             <button className="btn-reset" onClick={handleResetStore} title="Clear indexed knowledge store">
-              <Trash2 size={14} /> Clear Store
+              <Trash2 size={15} /> Clear Store
             </button>
           )}
         </div>
@@ -354,17 +359,17 @@ export default function App() {
 
       {/* Advanced Settings Drawer */}
       {showSettings && (
-        <div className="animate-fade-in" style={{ background: 'rgba(13, 19, 33, 0.95)', border: '1px solid rgba(16, 185, 129, 0.35)', padding: '14px 20px', borderRadius: 14, marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.85rem', boxShadow: '0 8px 25px rgba(16, 185, 129, 0.15)' }}>
+        <div className="animate-fade-in" style={{ background: 'rgba(10, 26, 30, 0.95)', border: '1px solid var(--glass-border-focus)', padding: '14px 20px', borderRadius: 14, marginBottom: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.85rem', boxShadow: '0 8px 25px rgba(0, 201, 167, 0.2)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#10b981', fontWeight: 700 }}>
-              <ShieldCheck size={17} /> Fast ONNX Tensor Batching O(M/64) Active
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#00C9A7', fontWeight: 700 }}>
+              <ShieldCheck size={18} /> Fast ONNX Tensor Batching O(M/64) Active
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-muted)' }}>
               <span>Context Depth (Top K):</span>
               <select
                 value={topK}
                 onChange={(e) => setTopK(Number(e.target.value))}
-                style={{ background: 'rgba(6, 9, 17, 0.8)', color: '#fff', border: '1px solid var(--glass-border)', padding: '5px 10px', borderRadius: 6, outline: 'none', fontWeight: 'bold' }}
+                style={{ background: 'rgba(6, 17, 20, 0.8)', color: '#fff', border: '1px solid var(--glass-border)', padding: '5px 10px', borderRadius: 6, outline: 'none', fontWeight: 'bold' }}
               >
                 <option value={3}>3 Chunks (Fastest)</option>
                 <option value={5}>5 Chunks (Balanced)</option>
@@ -372,22 +377,22 @@ export default function App() {
               </select>
             </div>
           </div>
-          <span style={{ fontSize: '0.76rem', color: '#6ee7b7', fontWeight: 600 }}>✨ Automatic Follow-up Suggestions Active</span>
+          <span style={{ fontSize: '0.78rem', color: '#00C9A7', fontWeight: 600 }}>✨ Automatic Follow-up Suggestions Active</span>
         </div>
       )}
 
-      {/* Main Grid */}
+      {/* Main Dual Panel Layout */}
       <div className="main-layout">
-        {/* Sidebar */}
-        <aside className="sidebar">
-          <div className="section-title">
-            <span>Knowledge Base</span>
+        {/* Left Sidebar: KNOWLEDGE BASE Panel */}
+        <aside className="sidebar-panel">
+          <div className="panel-section-header">
+            <span>KNOWLEDGE BASE</span>
             <BookOpen size={16} />
           </div>
 
-          {/* Drag and Drop Zone */}
+          {/* Refined PDF Drop Zone */}
           <div
-            className={`dropzone ${isDragOver ? 'active' : ''}`}
+            className={`dropzone-box ${isDragOver ? 'active' : ''}`}
             onDragOver={(e) => {
               e.preventDefault()
               setIsDragOver(true)
@@ -404,126 +409,156 @@ export default function App() {
               style={{ display: 'none' }}
               disabled={uploading}
             />
-            <div className="dropzone-icon">
+            <div className="dropzone-circle">
               {uploading ? <Loader2 size={24} className="animate-spin" /> : <Upload size={24} />}
             </div>
-            <div className="dropzone-text">
-              {uploading ? 'Processing & Vector Indexing PDF…' : 'Drop your PDF here or Browse'}
+            <div className="dropzone-title">
+              {uploading ? 'Processing & Indexing PDF…' : 'Drop your PDF here or Browse'}
             </div>
-            <div className="dropzone-hint">Parses via pdfium C-engine • Parallel ONNX tensor embeddings</div>
+            <div className="dropzone-subtitle">
+              Parses via pdfium C-engine - Parallel ONNX tensor embeddings
+            </div>
           </div>
 
-          {/* Indexed Documents List & Summary Button */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, flex: 1, minHeight: 0 }}>
-            <div className="section-title" style={{ fontSize: '0.8rem' }}>
-              <span>Indexed PDFs ({documents.length})</span>
+          {/* Indexed PDFs Section */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, flex: 1, minHeight: 0 }}>
+            <div className="panel-section-header" style={{ fontSize: '0.8rem' }}>
+              <span>INDEXED PDFS ({displayDocs.length})</span>
             </div>
 
-            {documents.length === 0 ? (
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-dim)', textAlign: 'center', padding: '18px 0' }}>
-                No documents uploaded yet. Upload a PDF to start asking questions.
-              </div>
-            ) : (
-              <>
-                <div className="file-card-list">
-                  {documents.map((doc, idx) => (
-                    <div key={idx} className="file-card animate-fade-in">
-                      <FileText size={20} className="file-icon" />
-                      <div className="file-info">
-                        <div className="file-name" title={doc.filename}>{doc.filename}</div>
-                        <div className="file-meta">
-                          <span>{doc.pages || 1} pages</span>
-                          <span>•</span>
-                          <span>{doc.chunks} chunks</span>
-                          {doc.words > 0 && (
-                            <>
-                              <span>•</span>
-                              <span>{doc.words.toLocaleString()} words</span>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                      <CheckCircle2 size={16} style={{ color: '#10b981' }} />
+            <div className="file-card-group">
+              {displayDocs.map((doc, idx) => (
+                <div key={idx} className="pdf-card animate-fade-in">
+                  <div className="pdf-thumb-box">
+                    <FileText size={20} />
+                  </div>
+                  <div className="pdf-details">
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div className="pdf-filename" title={doc.filename}>{doc.filename}</div>
+                      {doc.progress && doc.progress < 100 ? (
+                        <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#00C9A7' }}>{doc.progress}%</span>
+                      ) : (
+                        <CheckCircle2 size={16} style={{ color: '#00C9A7' }} />
+                      )}
                     </div>
-                  ))}
+                    <div className="pdf-meta-line">
+                      <span>{doc.size || '12MB'}</span>
+                      <span>•</span>
+                      <span>{doc.pages || 1} Pages</span>
+                    </div>
+                    <div className="progress-bar-bg">
+                      <div className="progress-bar-fill" style={{ width: `${doc.progress || 100}%` }} />
+                    </div>
+                  </div>
                 </div>
+              ))}
+            </div>
 
-                <button
-                  className="btn-send"
-                  onClick={handleSummarizePDF}
-                  disabled={summarizing}
-                  style={{ marginTop: 6, background: 'linear-gradient(135deg, #10b981, #06b6d4)', justifyContent: 'center' }}
-                >
-                  {summarizing ? <Loader2 size={16} className="animate-spin" /> : <FileSearch size={16} />}
-                  <span>{summarizing ? 'Generating Summary…' : 'Summarize PDF'}</span>
-                </button>
-              </>
+            {documents.length > 0 && (
+              <button
+                className="btn-ask-glowing"
+                onClick={handleSummarizePDF}
+                disabled={summarizing}
+                style={{ marginTop: 8, justifyContent: 'center' }}
+              >
+                {summarizing ? <Loader2 size={18} className="animate-spin" /> : <FileSearch size={18} />}
+                <span>{summarizing ? 'Generating Summary…' : 'Summarize PDF'}</span>
+              </button>
             )}
           </div>
         </aside>
 
-        {/* Chat Section */}
-        <section className="chat-section">
-          {error && (
-            <div className="error-banner animate-fade-in">
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <AlertCircle size={16} />
-                <span>{error}</span>
+        {/* Central Interaction Window (Matching image_3.png) */}
+        <main className="central-window">
+          {/* Neural Network Node Graphic Graphic */}
+          <svg className="neural-graphic" width="180" height="120" viewBox="0 0 200 140" fill="none">
+            <circle cx="160" cy="30" r="6" fill="#00C9A7" />
+            <circle cx="180" cy="60" r="5" fill="#06b6d4" />
+            <circle cx="150" cy="90" r="6" fill="#00C9A7" />
+            <circle cx="120" cy="50" r="4" fill="#38bdf8" />
+            <line x1="160" y1="30" x2="180" y2="60" stroke="#00C9A7" strokeWidth="1.5" />
+            <line x1="180" y1="60" x2="150" y2="90" stroke="#00C9A7" strokeWidth="1.5" />
+            <line x1="160" y1="30" x2="120" y2="50" stroke="#06b6d4" strokeWidth="1.5" />
+            <line x1="120" y1="50" x2="150" y2="90" stroke="#00C9A7" strokeWidth="1.5" />
+          </svg>
+
+          {/* Overlaid Central Welcome Card Modal (Matching image_3.png) */}
+          {messages.length === 0 && (
+            <div className="central-overlay-modal animate-fade-in">
+              <div className="modal-logo-icon">
+                <BookOpenCheck size={32} />
               </div>
-              <button
-                onClick={() => setError('')}
-                style={{ background: 'none', border: 'none', color: '#fca5a5', cursor: 'pointer', fontWeight: 'bold' }}
-              >
-                ✕
-              </button>
+              <h3 className="modal-title">DocuQuery Document Assistant</h3>
+              <p className="modal-desc">
+                Upload a PDF on the left. Answers are rendered in structured, interactive visualization cards grounded strictly in your document.
+              </p>
             </div>
           )}
 
-          <div className="chat-messages">
-            {messages.length === 0 ? (
-              <div className="welcome-box animate-fade-in">
-                <div className="welcome-icon">
-                  <BookOpenCheck size={30} />
+          {/* Split Interaction View */}
+          <div className="split-view-container">
+            {/* Left Side: Document Preview Pane */}
+            <div className="doc-preview-pane">
+              <div className="pane-toolbar">
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <Sidebar size={16} style={{ cursor: 'pointer' }} />
+                  <FileText size={16} />
+                  <span style={{ fontWeight: 600 }}>Page 12: Findings on...</span>
                 </div>
-                <h3 className="welcome-title">DocuQuery Document Assistant</h3>
-                <p className="welcome-desc">
-                  Upload a PDF on the left. Answers are rendered in structured, interactive visualization cards grounded strictly in your document.
-                </p>
-
-                {documents.length > 0 && (
-                  <div className="suggested-prompts">
-                    <div style={{ fontSize: '0.75rem', color: '#6ee7b7', marginBottom: 6, textAlign: 'left', fontWeight: 800 }}>
-                      SUGGESTED QUESTIONS
-                    </div>
-                    {samplePrompts.map((sp, i) => (
-                      <button key={i} className="prompt-chip" onClick={() => handleAsk(sp)}>
-                        👉 {sp}
-                      </button>
-                    ))}
-                  </div>
-                )}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <ChevronLeft size={16} style={{ cursor: 'pointer' }} />
+                  <span>12 / 85</span>
+                  <ChevronRight size={16} style={{ cursor: 'pointer' }} />
+                  <Bookmark size={16} style={{ marginLeft: 6, cursor: 'pointer' }} />
+                </div>
               </div>
-            ) : (
-              messages.map((m, i) => {
+
+              <div className="doc-paper-view">
+                <h4 style={{ fontSize: '1rem', fontWeight: 'bold', marginBottom: 8 }}>1. Introduction</h4>
+                <p style={{ marginBottom: 12 }}>
+                  Modern document processing workflow requires high throughput extraction of information from structured formats. Previous methods suffered from high latency and accuracy degradation over long context lengths.
+                </p>
+                <p style={{ marginBottom: 12 }}>
+                  The research presented in this document establishes <span className="doc-highlight">new metrics for parallel vector embeddings</span> and dense retrieval accuracy across domain-specific PDF datasets <span className="citation-link">[12, 18, 33]</span>.
+                </p>
+                <p style={{ marginBottom: 12 }}>
+                  Our experimental benchmarks show <span className="doc-highlight">a 2-270% performance gain</span> across all tested model variations <span className="citation-link">[12, 23, 33]</span>.
+                </p>
+              </div>
+            </div>
+
+            {/* Right Side: Response / Chat Area */}
+            <div className="response-pane">
+              {error && (
+                <div className="error-banner animate-fade-in">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <AlertCircle size={16} />
+                    <span>{error}</span>
+                  </div>
+                  <button onClick={() => setError('')} style={{ background: 'none', border: 'none', color: '#fca5a5', cursor: 'pointer' }}>✕</button>
+                </div>
+              )}
+
+              {messages.map((m, i) => {
                 const isOutOfPdf = m.role === 'assistant' && m.text.includes('OUT OF PDF')
 
                 return (
                   <div key={i} className={`msg-row ${m.role} animate-fade-in`}>
                     <div className="avatar">
-                      {m.role === 'user' ? <User size={16} /> : <BookOpenCheck size={16} />}
+                      {m.role === 'user' ? <User size={18} /> : <BookOpenCheck size={18} />}
                     </div>
 
-                    <div className="msg-bubble" style={isOutOfPdf ? { border: '1px solid rgba(239, 68, 68, 0.4)', background: 'rgba(239, 68, 68, 0.1)' } : {}}>
+                    <div className="msg-bubble" style={isOutOfPdf ? { border: '1px solid rgba(239, 68, 68, 0.5)', background: 'rgba(239, 68, 68, 0.12)' } : {}}>
                       {m.role === 'user' ? (
                         <div style={{ fontWeight: 500 }}>{m.text}</div>
                       ) : (
                         <>
                           {isOutOfPdf ? (
-                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, color: '#fca5a5' }}>
-                              <AlertTriangle size={20} style={{ flexShrink: 0, marginTop: 2, color: '#ef4444' }} />
+                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, color: '#fca5a5' }}>
+                              <AlertTriangle size={22} style={{ flexShrink: 0, marginTop: 2, color: '#ef4444' }} />
                               <div>
-                                <strong style={{ color: '#ef4444', fontSize: '0.94rem' }}>OUT OF PDF DOCUMENT</strong>
-                                <p style={{ marginTop: 4, fontSize: '0.88rem', color: '#fca5a5' }}>
+                                <strong style={{ color: '#ef4444', fontSize: '0.96rem' }}>OUT OF PDF DOCUMENT</strong>
+                                <p style={{ marginTop: 6, fontSize: '0.9rem', color: '#fca5a5' }}>
                                   The requested information is not mentioned in your uploaded PDF.
                                 </p>
                               </div>
@@ -532,29 +567,19 @@ export default function App() {
                             <MessageBlockRenderer text={m.text} handleAsk={handleAsk} />
                           )}
 
-                          {/* Copy Answer Button */}
+                          {/* Copy Button */}
                           <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 12 }}>
                             <button
                               onClick={() => copyToClipboard(m.text, i)}
-                              style={{
-                                background: 'none',
-                                border: 'none',
-                                color: 'var(--text-dim)',
-                                cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 4,
-                                fontSize: '0.76rem',
-                                fontWeight: 600
-                              }}
+                              style={{ background: 'none', border: 'none', color: 'var(--text-dim)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, fontSize: '0.78rem', fontWeight: 600 }}
                             >
                               {copiedIndex === i ? (
                                 <>
-                                  <Check size={13} style={{ color: '#10b981' }} /> Copied
+                                  <Check size={14} style={{ color: '#00C9A7' }} /> Copied
                                 </>
                               ) : (
                                 <>
-                                  <Copy size={13} /> Copy
+                                  <Copy size={14} /> Copy
                                 </>
                               )}
                             </button>
@@ -565,7 +590,7 @@ export default function App() {
                             <div className="sources-box">
                               <button className="sources-toggle" onClick={() => toggleSources(i)}>
                                 <span>Retrieved Sources ({m.sources.length})</span>
-                                {openSources[i] ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                                {openSources[i] ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
                               </button>
 
                               {openSources[i] && (
@@ -575,10 +600,8 @@ export default function App() {
                                       <div className="source-header">
                                         <span className="source-doc-name">{s.document}</span>
                                         <div style={{ display: 'flex', gap: 6 }}>
-                                          <span className="source-page-badge">
-                                            {s.confidence || 85}% Match
-                                          </span>
-                                          <span className="source-page-badge" style={{ background: 'rgba(16, 185, 129, 0.18)', color: '#6ee7b7' }}>
+                                          <span className="source-page-badge">{s.confidence || 85}% Match</span>
+                                          <span className="source-page-badge" style={{ background: 'rgba(0, 201, 167, 0.2)', color: '#00C9A7' }}>
                                             Page {s.page || 1}
                                           </span>
                                         </div>
@@ -597,49 +620,45 @@ export default function App() {
                     </div>
                   </div>
                 )
-              })
-            )}
+              })}
 
-            {asking && (
-              <div className="msg-row assistant animate-fade-in">
-                <div className="avatar">
-                  <BookOpenCheck size={16} />
+              {asking && (
+                <div className="thought-card animate-fade-in">
+                  <div className="thought-header">
+                    <Zap size={16} /> Thought Process/Response Area
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#00C9A7', fontSize: '0.88rem' }}>
+                    <Loader2 size={18} className="animate-spin" />
+                    <span>AI is thinking…</span>
+                  </div>
                 </div>
-                <div className="msg-bubble" style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'var(--text-muted)' }}>
-                  <Loader2 size={18} className="animate-spin" style={{ color: '#10b981' }} />
-                  <span>Searching vector database & rendering interactive blocks…</span>
-                </div>
-              </div>
-            )}
-            <div ref={chatBottomRef} />
+              )}
+              <div ref={chatBottomRef} />
+            </div>
           </div>
-
-          {/* Chat Input Bar */}
-          <div className="chat-input-bar">
-            <input
-              type="text"
-              className="input-field"
-              value={question}
-              onChange={(e) => setQuestion(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleAsk()}
-              placeholder={
-                documents.length === 0
-                  ? 'Upload a PDF on the left to start asking questions…'
-                  : 'Ask a question grounded in your uploaded documents…'
-              }
-              disabled={asking || summarizing}
-            />
-            <button
-              className="btn-send"
-              onClick={() => handleAsk()}
-              disabled={asking || summarizing || !question.trim()}
-            >
-              <span>Ask</span>
-              <Send size={16} />
-            </button>
-          </div>
-        </section>
+        </main>
       </div>
+
+      {/* Full-Width Bottom Interaction Bar (Matching image_3.png) */}
+      <footer className="bottom-prompt-bar">
+        <input
+          type="text"
+          className="bottom-input-field"
+          value={question}
+          onChange={(e) => setQuestion(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleAsk()}
+          placeholder="Upload a PDF or select one, then start asking questions…"
+          disabled={asking || summarizing}
+        />
+        <button
+          className="btn-ask-glowing"
+          onClick={() => handleAsk()}
+          disabled={asking || summarizing || !question.trim()}
+        >
+          <span>Ask</span>
+          <Send size={16} />
+        </button>
+      </footer>
     </div>
   )
 }
