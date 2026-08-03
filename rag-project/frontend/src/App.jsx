@@ -29,7 +29,8 @@ import {
   ExternalLink,
   X,
   PanelLeftClose,
-  PanelLeftOpen
+  PanelLeftOpen,
+  CheckSquare
 } from 'lucide-react'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
@@ -227,7 +228,7 @@ export default function App() {
     setUploading(false)
     if (fileInputRef.current) fileInputRef.current.value = ''
 
-    // Automatically toggle collapse sidebar to left slide for maximum screen space!
+    // Automatically slide collapse sidebar to give max space to PDF & Chat
     setIsSidebarCollapsed(true)
   }
 
@@ -552,7 +553,7 @@ export default function App() {
             </div>
           </div>
 
-          {/* INDEXED PDFS Section */}
+          {/* INDEXED PDFS Section (Click Any Card to Select & Use!) */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, flex: 1, minHeight: 0 }}>
             <div className="panel-section-header" style={{ fontSize: '0.8rem' }}>
               <span>INDEXED PDFS ({documents.length})</span>
@@ -565,55 +566,67 @@ export default function App() {
             ) : (
               <>
                 <div className="file-card-group">
-                  {documents.map((doc, idx) => (
-                    <div
-                      key={idx}
-                      className="pdf-card animate-fade-in"
-                      style={{
-                        borderLeft: activeDocIndex === idx ? '4px solid #00C9A7' : '1px solid rgba(0, 201, 167, 0.2)',
-                        background: activeDocIndex === idx ? 'rgba(0, 201, 167, 0.12)' : 'rgba(13, 33, 39, 0.6)',
-                        cursor: 'pointer'
-                      }}
-                      onClick={() => {
-                        setActiveDocIndex(idx)
-                        setSelectedPage(1)
-                      }}
-                    >
-                      <div className="pdf-thumb-box">
-                        <FileText size={20} />
+                  {documents.map((doc, idx) => {
+                    const isSelected = activeDocIndex === idx
+
+                    return (
+                      <div
+                        key={idx}
+                        className="pdf-card animate-fade-in"
+                        style={{
+                          borderLeft: isSelected ? '4px solid #00C9A7' : '1px solid rgba(0, 201, 167, 0.2)',
+                          background: isSelected ? 'rgba(0, 201, 167, 0.16)' : 'rgba(13, 33, 39, 0.6)',
+                          boxShadow: isSelected ? '0 0 20px rgba(0, 201, 167, 0.25)' : 'none',
+                          cursor: 'pointer'
+                        }}
+                        onClick={() => {
+                          setActiveDocIndex(idx)
+                          setSelectedPage(1)
+                          setViewKey((prev) => prev + 1)
+                        }}
+                      >
+                        <div className="pdf-thumb-box" style={isSelected ? { background: '#00C9A7', color: '#fff' } : {}}>
+                          <FileText size={20} />
+                        </div>
+                        <div className="pdf-details">
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div className="pdf-filename" title={doc.filename} style={{ fontWeight: isSelected ? 800 : 700 }}>
+                              {doc.filename}
+                            </div>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleDeleteDocument(doc.filename)
+                              }}
+                              className="btn-delete-doc"
+                              title={`Delete ${doc.filename}`}
+                              style={{ background: 'none', border: 'none', color: '#fca5a5', cursor: 'pointer', padding: 3 }}
+                            >
+                              <Trash2 size={15} />
+                            </button>
+                          </div>
+                          
+                          <div className="pdf-meta-line">
+                            <span>{doc.pages || 1} Pages</span>
+                            <span>•</span>
+                            <span>{doc.chunks} chunks</span>
+                          </div>
+
+                          {/* Click to Select & Use Badge */}
+                          <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <span style={{ fontSize: '0.72rem', fontWeight: 700, color: isSelected ? '#00C9A7' : 'rgba(240, 253, 250, 0.5)' }}>
+                              {isSelected ? '✨ Active Selected PDF' : '👉 Click to Select & Use'}
+                            </span>
+                            {isSelected && <CheckSquare size={13} style={{ color: '#00C9A7' }} />}
+                          </div>
+
+                          <div className="progress-bar-bg">
+                            <div className="progress-bar-fill" style={{ width: '100%', background: isSelected ? '#00C9A7' : 'rgba(255,255,255,0.2)' }} />
+                          </div>
+                        </div>
                       </div>
-                      <div className="pdf-details">
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <div className="pdf-filename" title={doc.filename}>{doc.filename}</div>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleDeleteDocument(doc.filename)
-                            }}
-                            className="btn-delete-doc"
-                            title={`Delete ${doc.filename}`}
-                            style={{ background: 'none', border: 'none', color: '#fca5a5', cursor: 'pointer', padding: 3 }}
-                          >
-                            <Trash2 size={15} />
-                          </button>
-                        </div>
-                        <div className="pdf-meta-line">
-                          <span>{doc.pages || 1} Pages</span>
-                          <span>•</span>
-                          <span>{doc.chunks} chunks</span>
-                          {doc.words > 0 && (
-                            <>
-                              <span>•</span>
-                              <span>{doc.words.toLocaleString()} words</span>
-                            </>
-                          )}
-                        </div>
-                        <div className="progress-bar-bg">
-                          <div className="progress-bar-fill" style={{ width: '100%' }} />
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
 
                 <button
@@ -652,7 +665,7 @@ export default function App() {
               </div>
               <h3 className="modal-title">DocuQuery Document Assistant</h3>
               <p className="modal-desc">
-                Upload one or multiple PDFs on the left. Answers are rendered in structured, interactive visualization cards grounded strictly in your documents.
+                Upload one or multiple PDFs on the left. Click any document card to select & use it, or ask questions grounded strictly in your PDFs.
               </p>
             </div>
           )}
@@ -679,16 +692,17 @@ export default function App() {
                       onChange={(e) => {
                         setActiveDocIndex(Number(e.target.value))
                         setSelectedPage(1)
+                        setViewKey((prev) => prev + 1)
                       }}
                       style={{ background: 'rgba(6, 17, 20, 0.9)', color: '#00C9A7', border: '1px solid var(--glass-border)', padding: '3px 8px', borderRadius: 6, fontWeight: 'bold', outline: 'none' }}
                     >
                       {documents.map((d, i) => (
-                        <option key={i} value={i}>{d.filename}</option>
+                        <option key={i} value={i}>📖 {d.filename}</option>
                       ))}
                     </select>
                   ) : (
                     <span style={{ fontWeight: 600 }}>
-                      {activeDoc ? activeDoc.filename : 'PDF Viewer'}
+                      {activeDoc ? `📖 ${activeDoc.filename}` : 'PDF Viewer'}
                     </span>
                   )}
                 </div>
@@ -750,7 +764,7 @@ export default function App() {
                     <p style={{ marginBottom: 12, fontStyle: 'italic', color: '#475569' }}>
                       {activeDoc
                         ? `Viewing Page ${selectedPage} of ${activeDoc.filename}. Ask any question or click a page citation to view extracted snippets.`
-                        : 'Upload one or multiple PDFs on the left. The PDF viewer will render your actual pages live.'}
+                        : 'Upload one or multiple PDFs on the left. Click any document card to select and use it live.'}
                     </p>
                   )}
                 </div>
