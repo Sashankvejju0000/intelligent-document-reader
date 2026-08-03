@@ -42,7 +42,7 @@ const DocuQueryLogo = () => (
 )
 
 /* ==========================================================================
-   BLOCK-WISE INTERACTIVE RESPONSE RENDERER (Clean & Uncluttered Layout)
+   BLOCK-WISE INTERACTIVE RESPONSE RENDERER (Clean & Emoji-Rich)
    ========================================================================== */
 const MessageBlockRenderer = ({ text, handleAsk }) => {
   if (!text) return null
@@ -135,10 +135,11 @@ export default function App() {
   const [serverOnline, setServerOnline] = useState(false)
   const [openSources, setOpenSources] = useState({})
   
-  // Real PDF Blob URL & Page Viewer State
+  // Real PDF Blob URL & Page Navigation State
   const [pdfBlobUrl, setPdfBlobUrl] = useState(null)
   const [selectedPage, setSelectedPage] = useState(1)
   const [activeSnippet, setActiveSnippet] = useState('')
+  const [viewKey, setViewKey] = useState(0)
   
   // Advanced Options
   const [topK, setTopK] = useState(5)
@@ -178,6 +179,15 @@ export default function App() {
     }
   }
 
+  // Instant PDF Preview Generator
+  function initPdfPreview(file) {
+    if (!file) return
+    const objectUrl = URL.createObjectURL(file)
+    setPdfBlobUrl(objectUrl)
+    setSelectedPage(1)
+    setViewKey((prev) => prev + 1)
+  }
+
   async function uploadFile(file) {
     if (!file || !file.name.toLowerCase().endsWith('.pdf')) {
       setError('Please upload a valid PDF file.')
@@ -186,11 +196,6 @@ export default function App() {
 
     setUploading(true)
     setError('')
-    
-    // Create live Blob Object URL for iframe PDF rendering
-    const objectUrl = URL.createObjectURL(file)
-    setPdfBlobUrl(objectUrl)
-    setSelectedPage(1)
 
     const formData = new FormData()
     formData.append('file', file)
@@ -211,14 +216,20 @@ export default function App() {
 
   function handleFileSelect(e) {
     const file = e.target.files?.[0]
-    if (file) uploadFile(file)
+    if (file) {
+      initPdfPreview(file)
+      uploadFile(file)
+    }
   }
 
   function handleDrop(e) {
     e.preventDefault()
     setIsDragOver(false)
     const file = e.dataTransfer.files?.[0]
-    if (file) uploadFile(file)
+    if (file) {
+      initPdfPreview(file)
+      uploadFile(file)
+    }
   }
 
   async function handleAsk(promptText) {
@@ -244,7 +255,7 @@ export default function App() {
         { role: 'assistant', text: data.answer, sources: data.sources },
       ])
 
-      // Auto-jump PDF viewer to top matching source page & snippet!
+      // Instant Redirect/Jump of PDF viewer to top matching source page & snippet!
       if (data.sources && data.sources.length > 0) {
         jumpToPage(data.sources[0].page || 1, data.sources[0].chunk_text || '')
       }
@@ -257,6 +268,7 @@ export default function App() {
 
   function jumpToPage(pageNum, snippetText = '') {
     setSelectedPage(pageNum)
+    setViewKey((prev) => prev + 1)
     if (snippetText) setActiveSnippet(snippetText)
   }
 
@@ -439,7 +451,7 @@ export default function App() {
             </div>
           </div>
 
-          {/* INDEXED PDFS Section (ONLY SHOW WHEN PDF IS ACTUALLY UPLOADED) */}
+          {/* INDEXED PDFS Section */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, flex: 1, minHeight: 0 }}>
             <div className="panel-section-header" style={{ fontSize: '0.8rem' }}>
               <span>INDEXED PDFS ({documents.length})</span>
@@ -524,7 +536,7 @@ export default function App() {
 
           {/* Split Interaction View */}
           <div className="split-view-container">
-            {/* Left Side: Real PDF Document Previewer (Renders PDF file at Page N!) */}
+            {/* Left Side: Real PDF Document Previewer (Instant Preview on File Select + Redirect on Answer) */}
             <div className="doc-preview-pane">
               <div className="pane-toolbar">
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -536,7 +548,7 @@ export default function App() {
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <button
-                    onClick={() => setSelectedPage(Math.max(1, selectedPage - 1))}
+                    onClick={() => jumpToPage(Math.max(1, selectedPage - 1))}
                     disabled={selectedPage <= 1}
                     style={{ background: 'none', border: 'none', color: '#00C9A7', cursor: 'pointer' }}
                   >
@@ -546,7 +558,7 @@ export default function App() {
                     Page {selectedPage} / {maxPages}
                   </span>
                   <button
-                    onClick={() => setSelectedPage(Math.min(maxPages, selectedPage + 1))}
+                    onClick={() => jumpToPage(Math.min(maxPages, selectedPage + 1))}
                     disabled={selectedPage >= maxPages}
                     style={{ background: 'none', border: 'none', color: '#00C9A7', cursor: 'pointer' }}
                   >
@@ -558,7 +570,7 @@ export default function App() {
 
               {pdfBlobUrl ? (
                 <iframe
-                  key={`${pdfBlobUrl}-${selectedPage}`}
+                  key={`pdf-frame-${viewKey}-${selectedPage}`}
                   src={`${pdfBlobUrl}#page=${selectedPage}`}
                   className="pdf-iframe-viewer"
                   title="PDF Document Preview"
@@ -697,7 +709,7 @@ export default function App() {
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#00C9A7', fontSize: '0.88rem' }}>
                     <Loader2 size={18} className="animate-spin" />
-                    <span>AI is thinking & extracting page references…</span>
+                    <span>AI is thinking & redirecting to cited page…</span>
                   </div>
                 </div>
               )}
