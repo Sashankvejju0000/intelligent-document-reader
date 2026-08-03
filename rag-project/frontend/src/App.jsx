@@ -232,8 +232,10 @@ export default function App() {
   async function handleDeleteDocument(filename) {
     if (!window.confirm(`Are you sure you want to delete "${filename}"?`)) return
     try {
-      const res = await fetch(`${API_BASE}/documents?filename=${encodeURIComponent(filename)}`, {
-        method: 'DELETE'
+      const res = await fetch(`${API_BASE}/delete-doc`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename })
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.detail || 'Failed to delete document.')

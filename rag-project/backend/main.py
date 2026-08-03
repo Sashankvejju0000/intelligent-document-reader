@@ -113,14 +113,18 @@ async def ask_question(payload: AskRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.delete("/documents/{filename:path}")
-@app.delete("/documents")
-def delete_document(filename: str = None):
-    if not filename:
+class DeleteRequest(BaseModel):
+    filename: str
+
+
+@app.post("/delete-doc")
+@app.delete("/delete-doc")
+def delete_document(payload: DeleteRequest):
+    if not payload.filename:
         raise HTTPException(status_code=400, detail="Filename parameter is required.")
     try:
-        rag.delete_document(filename)
-        return {"status": "success", "message": f"Successfully deleted {filename}"}
+        rag.delete_document(payload.filename)
+        return {"status": "success", "message": f"Successfully deleted {payload.filename}"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
