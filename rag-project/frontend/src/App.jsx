@@ -33,7 +33,10 @@ import {
   CheckSquare
 } from 'lucide-react'
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api'
+
+// Netlify Functions accept request bodies up to ~6 MB; keep headroom for multipart encoding.
+const MAX_UPLOAD_BYTES = 4.5 * 1024 * 1024
 
 // DocuQuery AI Logo Icon
 const DocuQueryLogo = () => (
@@ -194,14 +197,20 @@ export default function App() {
   async function uploadFiles(files) {
     if (!files || files.length === 0) return
 
-    const validFiles = Array.from(files).filter(f => f.name.toLowerCase().endsWith('.pdf'))
-    if (validFiles.length === 0) {
+    const pdfFiles = Array.from(files).filter(f => f.name.toLowerCase().endsWith('.pdf'))
+    if (pdfFiles.length === 0) {
       setError('Please select valid PDF file(s).')
       return
     }
 
+    const validFiles = pdfFiles.filter(f => f.size <= MAX_UPLOAD_BYTES)
+    if (validFiles.length < pdfFiles.length) {
+      setError('Some files were skipped: PDFs must be 4.5 MB or smaller.')
+      if (validFiles.length === 0) return
+    }
+
     setUploading(true)
-    setError('')
+    if (validFiles.length === pdfFiles.length) setError('')
 
     // Immediately save blob URLs for instant rendering of all selected PDFs
     const newMap = { ...pdfBlobMap }
